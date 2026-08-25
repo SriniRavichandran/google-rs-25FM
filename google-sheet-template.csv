@@ -1,6 +1,0 @@
-ID	Date	Type	Category	Amount	Payment Method	Account	Description
-TX-1001	2026-08-25	income	Salary	75000	Bank Transfer	HDFC Savings	Monthly Salary Credit
-TX-1002	2026-08-25	expense	Food & Dining	1250	UPI	GooglePay (HDFC)	Dinner with family
-TX-1003	2026-08-25	expense	Fuel & Commute	2000	Credit Card	HDFC Regalia Gold	Petrol fill up
-TX-1004	2026-08-25	investment	Mutual Funds	10000	Bank Transfer	Zerodha Coin	Monthly SIP Investment
-TX-1005	2026-08-25	expense	Bills & Utilities	3450	Credit Card	ICICI Amazon Pay	Electricity & WiFi Bill

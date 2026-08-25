@@ -13,6 +13,7 @@ class AppRouter {
       'cash-flow': window.CashFlowModule,
       'investments': window.InvestmentsModule,
       'loans-given': window.LoansGivenModule,
+      'loans-taken': window.LoansTakenModule,
       'budget': window.BudgetModule,
       'bills': window.BillsModule,
       'goals': window.GoalsModule,
@@ -246,11 +247,11 @@ class AppRouter {
     }
 
     // 6. Submit Handler: + Add Loan Given
-    const loanForm = document.getElementById('add-loan-form');
-    if (loanForm) {
-      loanForm.addEventListener('submit', async (e) => {
+    const loanGivenForm = document.getElementById('add-loan-form');
+    if (loanGivenForm) {
+      loanGivenForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const formData = new FormData(loanForm);
+        const formData = new FormData(loanGivenForm);
         const amountGiven = parseFloat(formData.get('amountGiven')) || 0;
         const amountRepaid = parseFloat(formData.get('amountRepaid')) || 0;
 
@@ -273,7 +274,40 @@ class AppRouter {
         }
 
         this.closeModal('add-loan-modal');
-        loanForm.reset();
+        loanGivenForm.reset();
+        this.refreshCurrentModule();
+      });
+    }
+
+    // 7. Submit Handler: + Add Loan Taken (Borrowed Debt)
+    const loanTakenForm = document.getElementById('add-loan-taken-form');
+    if (loanTakenForm) {
+      loanTakenForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(loanTakenForm);
+        const amountTaken = parseFloat(formData.get('amountTaken')) || 0;
+        const amountRepaid = parseFloat(formData.get('amountRepaid')) || 0;
+
+        const newLoan = {
+          lenderName: formData.get('lenderName'),
+          amountTaken: amountTaken,
+          interestRate: parseFloat(formData.get('interestRate')) || 0,
+          dateTaken: formData.get('dateTaken') || new Date().toISOString().split('T')[0],
+          dueDate: formData.get('dueDate') || '',
+          amountRepaid: amountRepaid,
+          outstandingBalance: amountTaken - amountRepaid
+        };
+
+        window.StorageInstance.addLoanTaken(newLoan);
+
+        if (window.GoogleSheetsHandler) {
+          await window.GoogleSheetsHandler.appendRowToSheet([
+            newLoan.id, newLoan.lenderName, newLoan.amountTaken, `${newLoan.interestRate}%`, newLoan.dateTaken, newLoan.dueDate, newLoan.amountRepaid, newLoan.outstandingBalance
+          ]);
+        }
+
+        this.closeModal('add-loan-taken-modal');
+        loanTakenForm.reset();
         this.refreshCurrentModule();
       });
     }
@@ -318,7 +352,8 @@ class AppRouter {
         'bank-accounts': 'Debit Cards & Bank Accounts (Debit)',
         'cash-flow': 'Cash Flow (Cash)',
         'investments': 'Trade & Investments (Trade)',
-        'loans-given': 'Loans Given & Money Owed',
+        'loans-given': 'Loans Given (Given_Loan)',
+        'loans-taken': 'Loans Taken (Taken_Loan)',
         'budget': 'Budget vs Actual Tracking',
         'bills': 'Bills & Subscriptions Tracker',
         'goals': 'Financial Goals & Milestones',
@@ -379,9 +414,9 @@ class AppRouter {
     const data = window.StorageInstance.getData();
     const netWorth = window.StorageInstance.getTotalNetWorth();
     const savingsRate = window.StorageInstance.getSavingsRate();
-    const creditUtil = window.StorageInstance.getCreditCardUtilization();
     const totalLiquid = data.bankAccounts.reduce((s, a) => s + parseFloat(a.balance), 0);
     const totalLoansOwed = window.StorageInstance.getTotalLoansGiven();
+    const totalLoansTaken = window.StorageInstance.getTotalLoansTaken();
     const filteredTx = window.StorageInstance.getFilteredTransactions();
 
     container.innerHTML = `
@@ -422,9 +457,17 @@ class AppRouter {
 
         <div class="glass-card glass-card-glow-green">
           <div class="stat-widget">
-            <div class="stat-label">Money Owed to Me (Loans)</div>
+            <div class="stat-label">Money Owed to Me (Given Loan)</div>
             <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(totalLoansOwed)}</div>
-            <div class="stat-change bull"><span>Across ${data.loansGiven.length} Loans</span></div>
+            <div class="stat-change bull"><span>Across ${data.loansGiven.length} Loans Given</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card glass-card-glow-red">
+          <div class="stat-widget">
+            <div class="stat-label">Borrowed Debt (Taken Loan)</div>
+            <div class="stat-value" style="color: var(--bear-red);">${Formatters.formatCurrency(totalLoansTaken)}</div>
+            <div class="stat-change bear"><span>Across ${data.loansTaken.length} Loans Taken</span></div>
           </div>
         </div>
       </div>
@@ -448,6 +491,9 @@ class AppRouter {
         </button>
         <button class="btn btn-secondary" onclick="AppRouter.openModal('add-loan-modal')">
           + Add Loan Given
+        </button>
+        <button class="btn btn-secondary" onclick="AppRouter.openModal('add-loan-taken-modal')">
+          + Add Loan Taken
         </button>
       </div>
 
@@ -488,7 +534,7 @@ class AppRouter {
                     <td>
                       <span class="badge badge-${t.type}">${t.type.toUpperCase()}</span>
                     </td>
-                    <td style="font-weight: 700; color: ${t.type === 'income' ? 'var(--bull-green)' : t.type === 'expense' ? 'var(--bear-red)' : 'var(--sapphire-blue)'};">
+                    <td style="font-weight: 700; color: ${t.type === 'income' ? 'var(--bull-green)' : 'var(--bear-red)'};">
                       ${t.type === 'income' ? '+' : '-'}${Formatters.formatCurrency(t.amount)}
                     </td>
                     <td>${t.paymentMethod}</td>

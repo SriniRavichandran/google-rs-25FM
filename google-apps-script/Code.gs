@@ -40,6 +40,7 @@ function showFinanceSidebar() {
       <button class="btn" onclick="activateTab('Cash')">💰 Cash (Cash Flow)</button>
       <button class="btn" onclick="activateTab('Trade')">📈 Trade (Investments)</button>
       <button class="btn" onclick="activateTab('Given_Loan')">🤝 Given Loan (Money Owed)</button>
+      <button class="btn" onclick="activateTab('Taken_Loan')">💸 Taken Loan (Borrowed Debt)</button>
       <button class="btn" onclick="activateTab('Bills_Subscriptions')">🔄 Bills & Subscriptions</button>
       <button class="btn" onclick="activateTab('Budget_vs_Actual')">🎯 Budget vs Actual</button>
       <button class="btn" onclick="activateTab('Goals')">🏆 Financial Goals</button>
@@ -81,6 +82,7 @@ function setupSheetStructure() {
     { name: 'Cash', headers: ['ID', 'Date', 'Type', 'Category', 'Amount', 'Payment Method', 'Account', 'Description'] },
     { name: 'Trade', headers: ['ID', 'Symbol', 'Asset Name', 'Type', 'Quantity', 'Avg Buy Price', 'Current Price', 'Invested Amount', 'Current Value', 'P&L'] },
     { name: 'Given_Loan', headers: ['ID', 'Borrower Name', 'Amount Given', 'Interest Rate %', 'Date Given', 'Due Date', 'Amount Repaid', 'Outstanding Owed', 'Status'] },
+    { name: 'Taken_Loan', headers: ['ID', 'Lender Name', 'Amount Borrowed', 'Interest Rate %', 'Date Taken', 'Due Date', 'Amount Repaid', 'Outstanding Debt', 'Status'] },
     { name: 'Bills_Subscriptions', headers: ['ID', 'Name', 'Category', 'Amount', 'Due Date', 'Status'] },
     { name: 'Budget_vs_Actual', headers: ['ID', 'Category', 'Monthly Budget', 'Current Spent'] },
     { name: 'Goals', headers: ['ID', 'Goal Name', 'Target Amount', 'Current Saved', 'Target Date'] },

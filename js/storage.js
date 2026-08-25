@@ -10,6 +10,7 @@ const CLEAN_DYNAMIC_DATA = {
   transactions: [],
   investments: [],
   loansGiven: [],
+  loansTaken: [],
   budgets: [],
   bills: [],
   goals: []
@@ -30,6 +31,7 @@ class StorageEngine {
       if (stored) {
         this.data = JSON.parse(stored);
         if (!this.data.loansGiven) this.data.loansGiven = [];
+        if (!this.data.loansTaken) this.data.loansTaken = [];
       }
     } catch (e) {
       console.warn('LocalStorage error:', e);
@@ -54,6 +56,7 @@ class StorageEngine {
   getBankAccounts() { return this.data.bankAccounts || []; }
   getInvestments() { return this.data.investments || []; }
   getLoansGiven() { return this.data.loansGiven || []; }
+  getLoansTaken() { return this.data.loansTaken || []; }
   getBills() { return this.data.bills || []; }
   getBudgets() { return this.data.budgets || []; }
 
@@ -75,6 +78,10 @@ class StorageEngine {
 
   getTotalLoansGiven() {
     return this.getLoansGiven().reduce((sum, l) => sum + (parseFloat(l.outstandingOwed) || parseFloat(l.amountGiven) || 0), 0);
+  }
+
+  getTotalLoansTaken() {
+    return this.getLoansTaken().reduce((sum, l) => sum + (parseFloat(l.outstandingBalance) || parseFloat(l.amountTaken) || 0), 0);
   }
 
   // Filter transactions by selected time period
@@ -123,8 +130,10 @@ class StorageEngine {
     const bankTotal = this.data.bankAccounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
     const investmentTotal = this.data.investments.reduce((sum, i) => sum + (parseFloat(i.currentValue) || 0), 0);
     const loansOwedToMe = this.getTotalLoansGiven();
-    const totalLiabilities = this.data.creditCards.reduce((sum, c) => sum + (parseFloat(c.outstanding) || 0), 0);
-    return (bankTotal + investmentTotal + loansOwedToMe) - totalLiabilities;
+    const creditCardDebt = this.getTotalCreditOutstanding();
+    const loansTakenDebt = this.getTotalLoansTaken();
+    
+    return (bankTotal + investmentTotal + loansOwedToMe) - (creditCardDebt + loansTakenDebt);
   }
 
   getCreditCardUtilization() {
@@ -172,7 +181,7 @@ class StorageEngine {
   }
 
   addLoanGiven(loan) {
-    loan.id = 'loan-' + Date.now();
+    loan.id = 'loan-given-' + Date.now();
     this.data.loansGiven.unshift(loan);
     this.save();
     return loan;
@@ -182,6 +191,23 @@ class StorageEngine {
     const idx = this.data.loansGiven.findIndex(l => l.id === id);
     if (idx !== -1) {
       this.data.loansGiven.splice(idx, 1);
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  addLoanTaken(loan) {
+    loan.id = 'loan-taken-' + Date.now();
+    this.data.loansTaken.unshift(loan);
+    this.save();
+    return loan;
+  }
+
+  deleteLoanTaken(id) {
+    const idx = this.data.loansTaken.findIndex(l => l.id === id);
+    if (idx !== -1) {
+      this.data.loansTaken.splice(idx, 1);
       this.save();
       return true;
     }
