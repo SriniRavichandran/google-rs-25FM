@@ -15,6 +15,11 @@ import CashFlowView from './views/CashFlowView.jsx';
 import InvestmentsView from './views/InvestmentsView.jsx';
 import LoansGivenView from './views/LoansGivenView.jsx';
 import LoansTakenView from './views/LoansTakenView.jsx';
+import BudgetView from './views/BudgetView.jsx';
+import BillsView from './views/BillsView.jsx';
+import GoalsView from './views/GoalsView.jsx';
+import ReviewsView from './views/ReviewsView.jsx';
+import NetWorthView from './views/NetWorthView.jsx';
 
 import AddTransactionModal from './components/Modals/AddTransactionModal.jsx';
 import AddCreditCardModal from './components/Modals/AddCreditCardModal.jsx';
@@ -22,6 +27,10 @@ import AddBankAccountModal from './components/Modals/AddBankAccountModal.jsx';
 import AddTradeModal from './components/Modals/AddTradeModal.jsx';
 import AddLoanGivenModal from './components/Modals/AddLoanGivenModal.jsx';
 import AddLoanTakenModal from './components/Modals/AddLoanTakenModal.jsx';
+import AddBudgetModal from './components/Modals/AddBudgetModal.jsx';
+import AddBillModal from './components/Modals/AddBillModal.jsx';
+import AddGoalModal from './components/Modals/AddGoalModal.jsx';
+import AddReviewModal from './components/Modals/AddReviewModal.jsx';
 
 const MainAppContent = () => {
   const { currentView, theme } = useFinance();
@@ -35,6 +44,11 @@ const MainAppContent = () => {
       case 'investments': return <InvestmentsView />;
       case 'loans-given': return <LoansGivenView />;
       case 'loans-taken': return <LoansTakenView />;
+      case 'budget': return <BudgetView />;
+      case 'bills': return <BillsView />;
+      case 'goals': return <GoalsView />;
+      case 'reviews': return <ReviewsView />;
+      case 'net-worth': return <NetWorthView />;
       case 'dashboard':
       default:
         return <DashboardView />;
@@ -57,6 +71,10 @@ const MainAppContent = () => {
         <AddTradeModal />
         <AddLoanGivenModal />
         <AddLoanTakenModal />
+        <AddBudgetModal />
+        <AddBillModal />
+        <AddGoalModal />
+        <AddReviewModal />
       </Box>
     </ThemeProvider>
   );

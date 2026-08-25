@@ -11,7 +11,8 @@ const INITIAL_DATA = {
   loansTaken: [],
   budgets: [],
   bills: [],
-  goals: []
+  goals: [],
+  reviews: []
 };
 
 export const FinanceProvider = ({ children }) => {
@@ -27,7 +28,12 @@ export const FinanceProvider = ({ children }) => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'relentless');
   const [activeModal, setActiveModal] = useState(null);
+
   const [editingTx, setEditingTx] = useState(null);
+  const [editingBudget, setEditingBudget] = useState(null);
+  const [editingBill, setEditingBill] = useState(null);
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [editingReview, setEditingReview] = useState(null);
 
   const sheetId = "1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik";
   const clientId = "223951688164-fpfp028pti606lavi5iel7rihgts878v.apps.googleusercontent.com";
@@ -90,93 +96,61 @@ export const FinanceProvider = ({ children }) => {
     await autoCreateModuleTabs(token);
 
     try {
-      // Batch fetch values from Sheet1, Credit, Debit, Trade, Given_Loan, Taken_Loan
-      const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?ranges=Sheet1!A:H&ranges=Credit!A:G&ranges=Debit!A:F&ranges=Trade!A:H&ranges=Given_Loan!A:H&ranges=Taken_Loan!A:H`;
+      // Batch fetch values from Sheet1, Credit, Debit, Trade, Given_Loan, Taken_Loan, Budget_vs_Actual, Bills_Subscriptions, Goals, Reviews
+      const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?ranges=Sheet1!A:H&ranges=Credit!A:G&ranges=Debit!A:F&ranges=Trade!A:H&ranges=Given_Loan!A:H&ranges=Taken_Loan!A:H&ranges=Budget_vs_Actual!A:C&ranges=Bills_Subscriptions!A:F&ranges=Goals!A:E&ranges=Reviews!A:E`;
       const json = await apiFetch(batchUrl, {}, token);
 
       if (json && json.valueRanges) {
         const ranges = json.valueRanges;
 
         // 1. Transactions (Sheet1)
-        const txRows = (ranges[0]?.values || []).slice(1);
-        const parsedTx = txRows.map((r, idx) => ({
-          id: r[0] || `tx-${idx + 2}`,
-          sheetRowIndex: idx + 2,
-          date: r[1] || new Date().toISOString().split('T')[0],
-          type: (r[2] || 'expense').toLowerCase(),
-          category: r[3] || 'General',
-          amount: parseFloat(r[4]) || 0,
-          paymentMethod: r[5] || 'Cash',
-          account: r[6] || 'Main Account',
-          description: r[7] || ''
+        const parsedTx = (ranges[0]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `tx-${idx + 2}`, sheetRowIndex: idx + 2, date: r[1] || new Date().toISOString().split('T')[0], type: (r[2] || 'expense').toLowerCase(), category: r[3] || 'General', amount: parseFloat(r[4]) || 0, paymentMethod: r[5] || 'Cash', account: r[6] || 'Main Account', description: r[7] || ''
         }));
 
         // 2. Credit Cards (Credit)
-        const creditRows = (ranges[1]?.values || []).slice(1);
-        const parsedCredit = creditRows.map((r, idx) => ({
-          id: r[0] || `card-${idx + 2}`,
-          sheetRowIndex: idx + 2,
-          name: r[1] || 'Credit Card',
-          bank: r[2] || 'Bank',
-          network: r[3] || 'Visa',
-          limit: parseFloat(r[4]) || 0,
-          outstanding: parseFloat(r[5]) || 0,
-          dueDate: parseInt(r[6], 10) || 15
+        const parsedCredit = (ranges[1]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `card-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Credit Card', bank: r[2] || 'Bank', network: r[3] || 'Visa', limit: parseFloat(r[4]) || 0, outstanding: parseFloat(r[5]) || 0, dueDate: parseInt(r[6], 10) || 15
         }));
 
         // 3. Debit / Bank Accounts (Debit)
-        const bankRows = (ranges[2]?.values || []).slice(1);
-        const parsedBank = bankRows.map((r, idx) => ({
-          id: r[0] || `bank-${idx + 2}`,
-          sheetRowIndex: idx + 2,
-          name: r[1] || 'Bank Account',
-          bank: r[2] || 'Bank',
-          type: r[3] || 'Savings',
-          balance: parseFloat(r[4]) || 0,
-          accountNumber: r[5] || '0000'
+        const parsedBank = (ranges[2]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `bank-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Bank Account', bank: r[2] || 'Bank', type: r[3] || 'Savings', balance: parseFloat(r[4]) || 0, accountNumber: r[5] || '0000'
         }));
 
         // 4. Trade / Investments (Trade)
-        const tradeRows = (ranges[3]?.values || []).slice(1);
-        const parsedTrade = tradeRows.map((r, idx) => ({
-          id: r[0] || `inv-${idx + 2}`,
-          sheetRowIndex: idx + 2,
-          name: r[1] || 'Asset',
-          type: r[2] || 'Equity',
-          action: r[3] || 'BUY',
-          quantity: parseFloat(r[4]) || 0,
-          buyPrice: parseFloat(r[5]) || 0,
-          currentPrice: parseFloat(r[6]) || 0,
-          investedAmount: (parseFloat(r[4]) || 0) * (parseFloat(r[5]) || 0),
-          currentValue: (parseFloat(r[4]) || 0) * (parseFloat(r[6]) || 0)
+        const parsedTrade = (ranges[3]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `inv-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Asset', type: r[2] || 'Equity', action: r[3] || 'BUY', quantity: parseFloat(r[4]) || 0, buyPrice: parseFloat(r[5]) || 0, currentPrice: parseFloat(r[6]) || 0, investedAmount: (parseFloat(r[4]) || 0) * (parseFloat(r[5]) || 0), currentValue: (parseFloat(r[4]) || 0) * (parseFloat(r[6]) || 0)
         }));
 
         // 5. Loans Given (Given_Loan)
-        const givenRows = (ranges[4]?.values || []).slice(1);
-        const parsedGiven = givenRows.map((r, idx) => ({
-          id: r[0] || `given-${idx + 2}`,
-          sheetRowIndex: idx + 2,
-          borrowerName: r[1] || 'Borrower',
-          amountGiven: parseFloat(r[2]) || 0,
-          interestRate: parseFloat(r[3]) || 0,
-          dateGiven: r[4] || '',
-          dueDate: r[5] || '',
-          amountRepaid: parseFloat(r[6]) || 0,
-          outstandingOwed: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
+        const parsedGiven = (ranges[4]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `given-${idx + 2}`, sheetRowIndex: idx + 2, borrowerName: r[1] || 'Borrower', amountGiven: parseFloat(r[2]) || 0, interestRate: parseFloat(r[3]) || 0, dateGiven: r[4] || '', dueDate: r[5] || '', amountRepaid: parseFloat(r[6]) || 0, outstandingOwed: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
         }));
 
         // 6. Loans Taken (Taken_Loan)
-        const takenRows = (ranges[5]?.values || []).slice(1);
-        const parsedTaken = takenRows.map((r, idx) => ({
-          id: r[0] || `taken-${idx + 2}`,
-          sheetRowIndex: idx + 2,
-          lenderName: r[1] || 'Lender',
-          amountTaken: parseFloat(r[2]) || 0,
-          interestRate: parseFloat(r[3]) || 0,
-          dateTaken: r[4] || '',
-          dueDate: r[5] || '',
-          amountRepaid: parseFloat(r[6]) || 0,
-          outstandingBalance: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
+        const parsedTaken = (ranges[5]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `taken-${idx + 2}`, sheetRowIndex: idx + 2, lenderName: r[1] || 'Lender', amountTaken: parseFloat(r[2]) || 0, interestRate: parseFloat(r[3]) || 0, dateTaken: r[4] || '', dueDate: r[5] || '', amountRepaid: parseFloat(r[6]) || 0, outstandingBalance: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
+        }));
+
+        // 7. Budget vs Actual (Budget_vs_Actual)
+        const parsedBudget = (ranges[6]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `budget-${idx + 2}`, sheetRowIndex: idx + 2, category: r[1] || 'General', budgetAmount: parseFloat(r[2]) || 0
+        }));
+
+        // 8. Bills & Subscriptions (Bills_Subscriptions)
+        const parsedBills = (ranges[7]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `bill-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Service', category: r[2] || 'Subscription', amount: parseFloat(r[3]) || 0, dueDate: r[4] || '5', status: r[5] || 'DUE'
+        }));
+
+        // 9. Financial Goals (Goals)
+        const parsedGoals = (ranges[8]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `goal-${idx + 2}`, sheetRowIndex: idx + 2, title: r[1] || 'Goal', targetAmount: parseFloat(r[2]) || 0, savedAmount: parseFloat(r[3]) || 0, targetDate: r[4] || ''
+        }));
+
+        // 10. Reviews (Reviews)
+        const parsedReviews = (ranges[9]?.values || []).slice(1).map((r, idx) => ({
+          id: r[0] || `review-${idx + 2}`, sheetRowIndex: idx + 2, date: r[1] || '', type: r[2] || 'Weekly Review', grade: r[3] || 'A', notes: r[4] || ''
         }));
 
         setData({
@@ -186,9 +160,10 @@ export const FinanceProvider = ({ children }) => {
           investments: parsedTrade,
           loansGiven: parsedGiven,
           loansTaken: parsedTaken,
-          budgets: [],
-          bills: [],
-          goals: []
+          budgets: parsedBudget,
+          bills: parsedBills,
+          goals: parsedGoals,
+          reviews: parsedReviews
         });
       }
     } catch (err) {
@@ -377,9 +352,7 @@ export const FinanceProvider = ({ children }) => {
   const addTransaction = (tx) => {
     const newTx = { ...tx, id: 'tx-' + Date.now(), sheetRowIndex: data.transactions.length + 2 };
     setData(prev => ({ ...prev, transactions: [newTx, ...prev.transactions] }));
-    appendRowToSheet([
-      newTx.id, newTx.date, newTx.type, newTx.category, newTx.amount, newTx.paymentMethod, newTx.account, newTx.description
-    ], 'Sheet1');
+    appendRowToSheet([newTx.id, newTx.date, newTx.type, newTx.category, newTx.amount, newTx.paymentMethod, newTx.account, newTx.description], 'Sheet1');
   };
 
   const editTransaction = (id, updated) => {
@@ -388,9 +361,7 @@ export const FinanceProvider = ({ children }) => {
       transactions: prev.transactions.map(t => {
         if (t.id === id) {
           const item = { ...t, ...updated };
-          updateRowInSheet('Sheet1', item.sheetRowIndex || 2, [
-            item.id, item.date, item.type, item.category, item.amount, item.paymentMethod, item.account, item.description
-          ]);
+          updateRowInSheet('Sheet1', item.sheetRowIndex || 2, [item.id, item.date, item.type, item.category, item.amount, item.paymentMethod, item.account, item.description]);
           return item;
         }
         return t;
@@ -400,13 +371,8 @@ export const FinanceProvider = ({ children }) => {
 
   const deleteTransaction = (id) => {
     const target = data.transactions.find(t => t.id === id);
-    if (target && target.sheetRowIndex) {
-      deleteRowInSheet('Sheet1', target.sheetRowIndex);
-    }
-    setData(prev => ({
-      ...prev,
-      transactions: prev.transactions.filter(t => t.id !== id)
-    }));
+    if (target && target.sheetRowIndex) deleteRowInSheet('Sheet1', target.sheetRowIndex);
+    setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
   };
 
   const addCreditCard = (card) => {
@@ -439,6 +405,114 @@ export const FinanceProvider = ({ children }) => {
     appendRowToSheet([newLoan.id, newLoan.lenderName, newLoan.amountTaken, newLoan.interestRate, newLoan.dateTaken, newLoan.dueDate, newLoan.amountRepaid, newLoan.outstandingBalance], 'Taken_Loan');
   };
 
+  // 7. Budget CRUD
+  const addBudget = (budget) => {
+    const newBudget = { ...budget, id: 'budget-' + Date.now(), sheetRowIndex: data.budgets.length + 2 };
+    setData(prev => ({ ...prev, budgets: [...prev.budgets, newBudget] }));
+    appendRowToSheet([newBudget.id, newBudget.category, newBudget.budgetAmount], 'Budget_vs_Actual');
+  };
+
+  const editBudget = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      budgets: prev.budgets.map(b => {
+        if (b.id === id) {
+          const item = { ...b, ...updated };
+          updateRowInSheet('Budget_vs_Actual', item.sheetRowIndex || 2, [item.id, item.category, item.budgetAmount]);
+          return item;
+        }
+        return b;
+      })
+    }));
+  };
+
+  const deleteBudget = (id) => {
+    const target = data.budgets.find(b => b.id === id);
+    if (target && target.sheetRowIndex) deleteRowInSheet('Budget_vs_Actual', target.sheetRowIndex);
+    setData(prev => ({ ...prev, budgets: prev.budgets.filter(b => b.id !== id) }));
+  };
+
+  // 8. Bills CRUD
+  const addBill = (bill) => {
+    const newBill = { ...bill, id: 'bill-' + Date.now(), sheetRowIndex: data.bills.length + 2 };
+    setData(prev => ({ ...prev, bills: [...prev.bills, newBill] }));
+    appendRowToSheet([newBill.id, newBill.name, newBill.category, newBill.amount, newBill.dueDate, newBill.status], 'Bills_Subscriptions');
+  };
+
+  const editBill = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      bills: prev.bills.map(b => {
+        if (b.id === id) {
+          const item = { ...b, ...updated };
+          updateRowInSheet('Bills_Subscriptions', item.sheetRowIndex || 2, [item.id, item.name, item.category, item.amount, item.dueDate, item.status]);
+          return item;
+        }
+        return b;
+      })
+    }));
+  };
+
+  const deleteBill = (id) => {
+    const target = data.bills.find(b => b.id === id);
+    if (target && target.sheetRowIndex) deleteRowInSheet('Bills_Subscriptions', target.sheetRowIndex);
+    setData(prev => ({ ...prev, bills: prev.bills.filter(b => b.id !== id) }));
+  };
+
+  // 9. Goals CRUD
+  const addGoal = (goal) => {
+    const newGoal = { ...goal, id: 'goal-' + Date.now(), sheetRowIndex: data.goals.length + 2 };
+    setData(prev => ({ ...prev, goals: [...prev.goals, newGoal] }));
+    appendRowToSheet([newGoal.id, newGoal.title, newGoal.targetAmount, newGoal.savedAmount, newGoal.targetDate], 'Goals');
+  };
+
+  const editGoal = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      goals: prev.goals.map(g => {
+        if (g.id === id) {
+          const item = { ...g, ...updated };
+          updateRowInSheet('Goals', item.sheetRowIndex || 2, [item.id, item.title, item.targetAmount, item.savedAmount, item.targetDate]);
+          return item;
+        }
+        return g;
+      })
+    }));
+  };
+
+  const deleteGoal = (id) => {
+    const target = data.goals.find(g => g.id === id);
+    if (target && target.sheetRowIndex) deleteRowInSheet('Goals', target.sheetRowIndex);
+    setData(prev => ({ ...prev, goals: prev.goals.filter(g => g.id !== id) }));
+  };
+
+  // 10. Reviews CRUD
+  const addReview = (review) => {
+    const newReview = { ...review, id: 'review-' + Date.now(), sheetRowIndex: data.reviews.length + 2 };
+    setData(prev => ({ ...prev, reviews: [newReview, ...prev.reviews] }));
+    appendRowToSheet([newReview.id, newReview.date, newReview.type, newReview.grade, newReview.notes], 'Reviews');
+  };
+
+  const editReview = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      reviews: prev.reviews.map(r => {
+        if (r.id === id) {
+          const item = { ...r, ...updated };
+          updateRowInSheet('Reviews', item.sheetRowIndex || 2, [item.id, item.date, item.type, item.grade, item.notes]);
+          return item;
+        }
+        return r;
+      })
+    }));
+  };
+
+  const deleteReview = (id) => {
+    const target = data.reviews.find(r => r.id === id);
+    if (target && target.sheetRowIndex) deleteRowInSheet('Reviews', target.sheetRowIndex);
+    setData(prev => ({ ...prev, reviews: prev.reviews.filter(r => r.id !== id) }));
+  };
+
   return (
     <FinanceContext.Provider value={{
       data,
@@ -453,6 +527,10 @@ export const FinanceProvider = ({ children }) => {
       theme, setTheme,
       activeModal, setActiveModal,
       editingTx, setEditingTx,
+      editingBudget, setEditingBudget,
+      editingBill, setEditingBill,
+      editingGoal, setEditingGoal,
+      editingReview, setEditingReview,
       netWorth,
       savingsRate,
       totalBankBalance,
@@ -464,14 +542,16 @@ export const FinanceProvider = ({ children }) => {
       totalPortfolioValue,
       creditUtil,
       filteredTx,
-      addTransaction,
-      editTransaction,
-      deleteTransaction,
+      addTransaction, editTransaction, deleteTransaction,
       addCreditCard,
       addBankAccount,
       addTrade,
       addLoanGiven,
       addLoanTaken,
+      addBudget, editBudget, deleteBudget,
+      addBill, editBill, deleteBill,
+      addGoal, editGoal, deleteGoal,
+      addReview, editReview, deleteReview,
       refreshData: loadAllSheetsFromGoogle
     }}>
       {children}
