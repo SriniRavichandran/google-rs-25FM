@@ -18,12 +18,12 @@ const TopHeader = () => {
 
   const titleMap = {
     'dashboard': 'Dashboard Overview',
-    'credit-cards': 'Credit Cards (Credit)',
-    'bank-accounts': 'Debit Cards & Bank Accounts (Debit)',
-    'cash-flow': 'Cash Flow (Cash)',
-    'investments': 'Trade & Investments (Trade)',
-    'loans-given': 'Loans Given (Given_Loan)',
-    'loans-taken': 'Loans Taken (Taken_Loan)',
+    'credit-cards': 'Credit Cards',
+    'bank-accounts': 'Debit Cards & Bank Accounts',
+    'cash-flow': 'Cash Flow',
+    'investments': 'Trade & Investments',
+    'loans-given': 'Loans Given',
+    'loans-taken': 'Loans Taken',
     'budget': 'Budget vs Actual Tracking',
     'bills': 'Bills & Subscriptions Tracker',
     'goals': 'Financial Goals & Milestones',

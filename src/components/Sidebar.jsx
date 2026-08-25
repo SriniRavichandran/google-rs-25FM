@@ -32,12 +32,12 @@ const Sidebar = () => {
 
   const coreNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon color="primary" /> },
-    { id: 'credit-cards', label: 'Credit Cards (Credit)', icon: <CreditCardIcon style={{ color: '#ef4444' }} /> },
-    { id: 'bank-accounts', label: 'Debit Cards & Bank (Debit)', icon: <AccountBalanceIcon style={{ color: '#38bdf8' }} /> },
-    { id: 'cash-flow', label: 'Cash Flow (Cash)', icon: <AttachMoneyIcon style={{ color: '#10b981' }} /> },
-    { id: 'investments', label: 'Trade & Investments (Trade)', icon: <TrendingUpIcon style={{ color: '#f59e0b' }} /> },
-    { id: 'loans-given', label: 'Loans Given (Given_Loan)', icon: <HandshakeIcon style={{ color: '#10b981' }} /> },
-    { id: 'loans-taken', label: 'Loans Taken (Taken_Loan)', icon: <MoneyOffIcon style={{ color: '#ef4444' }} /> },
+    { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCardIcon style={{ color: '#ef4444' }} /> },
+    { id: 'bank-accounts', label: 'Debit Cards & Bank', icon: <AccountBalanceIcon style={{ color: '#38bdf8' }} /> },
+    { id: 'cash-flow', label: 'Cash Flow', icon: <AttachMoneyIcon style={{ color: '#10b981' }} /> },
+    { id: 'investments', label: 'Trade & Investments', icon: <TrendingUpIcon style={{ color: '#f59e0b' }} /> },
+    { id: 'loans-given', label: 'Loans Given', icon: <HandshakeIcon style={{ color: '#10b981' }} /> },
+    { id: 'loans-taken', label: 'Loans Taken', icon: <MoneyOffIcon style={{ color: '#ef4444' }} /> },
   ];
 
   const analyticsNavItems = [
@@ -65,7 +65,7 @@ const Sidebar = () => {
     >
       {/* Sidebar Header Brand Logo */}
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <img src="RS-25F Mind.png" alt="RS-25F MIND Logo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
+        <img src="logo.png" alt="RS-25F MIND Logo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             RS-25F MIND

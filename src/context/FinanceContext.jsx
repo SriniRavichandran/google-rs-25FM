@@ -2,8 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const FinanceContext = createContext();
 
-const STORAGE_KEY = 'RS25F_MIND_FINANCE_DATA_V2';
-
 const INITIAL_DATA = {
   creditCards: [],
   bankAccounts: [],
@@ -17,14 +15,8 @@ const INITIAL_DATA = {
 };
 
 export const FinanceProvider = ({ children }) => {
-  const [data, setData] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : INITIAL_DATA;
-    } catch (e) {
-      return INITIAL_DATA;
-    }
-  });
+  const [data, setData] = useState(INITIAL_DATA);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -41,50 +33,74 @@ export const FinanceProvider = ({ children }) => {
   const clientId = "223951688164-fpfp028pti606lavi5iel7rihgts878v.apps.googleusercontent.com";
   const scopes = "https://www.googleapis.com/auth/spreadsheets";
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {}
-  }, [data]);
-
-  // Google Sheets API v4 Helper Call
-  const apiCall = async (url, options = {}) => {
-    const token = accessToken || localStorage.getItem('g_access_token');
+  // Google API fetch wrapper
+  const apiFetch = async (url, options = {}, tokenOverride = null) => {
+    const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
     if (!token) return null;
-    options.headers = { ...options.headers, Authorization: `Bearer ${token}` };
+    options.headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token}`
+    };
     const r = await fetch(url, options);
-    if (!r.ok) throw new Error(`Google API Error (${r.status}): ${await r.text()}`);
+    if (!r.ok) {
+      const errText = await r.text();
+      console.warn(`Google Sheets API Warning (${r.status}):`, errText);
+      return null;
+    }
     return r.json();
   };
 
-  // Auto-restore session & load Google Sheet on mount
-  useEffect(() => {
-    const token = localStorage.getItem('g_access_token');
-    const expiresAt = localStorage.getItem('g_token_expires');
-
-    if (token && expiresAt && Date.now() < (parseInt(expiresAt, 10) - 60000)) {
-      setAccessToken(token);
-      setIsAuthenticated(true);
-      loadSheetData(token);
-    }
-  }, []);
-
-  // Load Sheet Data from Google Sheet
-  const loadSheetData = async (tokenOverride = null) => {
+  // Ensure all 11 required module sheet tabs exist in Google Sheets
+  const autoCreateModuleTabs = async (tokenOverride = null) => {
     const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
 
     try {
-      const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A:H`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) return;
-      const json = await res.json();
-      const rawValues = json.values || [];
+      const meta = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {}, token);
+      if (!meta || !meta.sheets) return;
 
-      if (rawValues.length > 1) {
-        const parsedTx = rawValues.slice(1).map((r, idx) => ({
-          id: r[0] || `row-${idx + 2}`,
+      const existingTitles = meta.sheets.map(s => s.properties.title);
+      const requiredTabs = [
+        'Sheet1', 'Credit', 'Debit', 'Cash', 'Trade', 'Given_Loan', 'Taken_Loan', 'Bills_Subscriptions', 'Budget_vs_Actual', 'Goals', 'Reviews'
+      ];
+
+      const missing = requiredTabs.filter(t => !existingTitles.includes(t));
+      if (missing.length > 0) {
+        const requests = missing.map(title => ({
+          addSheet: { properties: { title } }
+        }));
+        await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requests })
+        }, token);
+        console.log("Auto-created missing sheet tabs:", missing);
+      }
+    } catch (err) {
+      console.warn("Auto create tabs warning:", err);
+    }
+  };
+
+  // Load ALL data directly from Google Sheets API v4 (Source of Truth)
+  const loadAllSheetsFromGoogle = async (tokenOverride = null) => {
+    const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
+    if (!token) return;
+
+    setIsLoading(true);
+    await autoCreateModuleTabs(token);
+
+    try {
+      // Batch fetch values from Sheet1, Credit, Debit, Trade, Given_Loan, Taken_Loan
+      const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?ranges=Sheet1!A:H&ranges=Credit!A:G&ranges=Debit!A:F&ranges=Trade!A:H&ranges=Given_Loan!A:H&ranges=Taken_Loan!A:H`;
+      const json = await apiFetch(batchUrl, {}, token);
+
+      if (json && json.valueRanges) {
+        const ranges = json.valueRanges;
+
+        // 1. Transactions (Sheet1)
+        const txRows = (ranges[0]?.values || []).slice(1);
+        const parsedTx = txRows.map((r, idx) => ({
+          id: r[0] || `tx-${idx + 2}`,
           sheetRowIndex: idx + 2,
           date: r[1] || new Date().toISOString().split('T')[0],
           type: (r[2] || 'expense').toLowerCase(),
@@ -95,17 +111,109 @@ export const FinanceProvider = ({ children }) => {
           description: r[7] || ''
         }));
 
-        setData(prev => ({ ...prev, transactions: parsedTx }));
+        // 2. Credit Cards (Credit)
+        const creditRows = (ranges[1]?.values || []).slice(1);
+        const parsedCredit = creditRows.map((r, idx) => ({
+          id: r[0] || `card-${idx + 2}`,
+          sheetRowIndex: idx + 2,
+          name: r[1] || 'Credit Card',
+          bank: r[2] || 'Bank',
+          network: r[3] || 'Visa',
+          limit: parseFloat(r[4]) || 0,
+          outstanding: parseFloat(r[5]) || 0,
+          dueDate: parseInt(r[6], 10) || 15
+        }));
+
+        // 3. Debit / Bank Accounts (Debit)
+        const bankRows = (ranges[2]?.values || []).slice(1);
+        const parsedBank = bankRows.map((r, idx) => ({
+          id: r[0] || `bank-${idx + 2}`,
+          sheetRowIndex: idx + 2,
+          name: r[1] || 'Bank Account',
+          bank: r[2] || 'Bank',
+          type: r[3] || 'Savings',
+          balance: parseFloat(r[4]) || 0,
+          accountNumber: r[5] || '0000'
+        }));
+
+        // 4. Trade / Investments (Trade)
+        const tradeRows = (ranges[3]?.values || []).slice(1);
+        const parsedTrade = tradeRows.map((r, idx) => ({
+          id: r[0] || `inv-${idx + 2}`,
+          sheetRowIndex: idx + 2,
+          name: r[1] || 'Asset',
+          type: r[2] || 'Equity',
+          action: r[3] || 'BUY',
+          quantity: parseFloat(r[4]) || 0,
+          buyPrice: parseFloat(r[5]) || 0,
+          currentPrice: parseFloat(r[6]) || 0,
+          investedAmount: (parseFloat(r[4]) || 0) * (parseFloat(r[5]) || 0),
+          currentValue: (parseFloat(r[4]) || 0) * (parseFloat(r[6]) || 0)
+        }));
+
+        // 5. Loans Given (Given_Loan)
+        const givenRows = (ranges[4]?.values || []).slice(1);
+        const parsedGiven = givenRows.map((r, idx) => ({
+          id: r[0] || `given-${idx + 2}`,
+          sheetRowIndex: idx + 2,
+          borrowerName: r[1] || 'Borrower',
+          amountGiven: parseFloat(r[2]) || 0,
+          interestRate: parseFloat(r[3]) || 0,
+          dateGiven: r[4] || '',
+          dueDate: r[5] || '',
+          amountRepaid: parseFloat(r[6]) || 0,
+          outstandingOwed: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
+        }));
+
+        // 6. Loans Taken (Taken_Loan)
+        const takenRows = (ranges[5]?.values || []).slice(1);
+        const parsedTaken = takenRows.map((r, idx) => ({
+          id: r[0] || `taken-${idx + 2}`,
+          sheetRowIndex: idx + 2,
+          lenderName: r[1] || 'Lender',
+          amountTaken: parseFloat(r[2]) || 0,
+          interestRate: parseFloat(r[3]) || 0,
+          dateTaken: r[4] || '',
+          dueDate: r[5] || '',
+          amountRepaid: parseFloat(r[6]) || 0,
+          outstandingBalance: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
+        }));
+
+        setData({
+          transactions: parsedTx,
+          creditCards: parsedCredit,
+          bankAccounts: parsedBank,
+          investments: parsedTrade,
+          loansGiven: parsedGiven,
+          loansTaken: parsedTaken,
+          budgets: [],
+          bills: [],
+          goals: []
+        });
       }
     } catch (err) {
-      console.warn("Load sheet data warning:", err);
+      console.warn("Load all sheets error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Restore session & load Google Sheet on mount
+  useEffect(() => {
+    const token = localStorage.getItem('g_access_token');
+    const expiresAt = localStorage.getItem('g_token_expires');
+
+    if (token && expiresAt && Date.now() < (parseInt(expiresAt, 10) - 60000)) {
+      setAccessToken(token);
+      setIsAuthenticated(true);
+      loadAllSheetsFromGoogle(token);
+    }
+  }, []);
 
   // Google Sign In
   const handleGoogleLogin = () => {
     if (typeof window.google === 'undefined' || !window.google.accounts?.oauth2) {
-      alert("Google API loading... Please check internet connection.");
+      alert("Google OAuth API loading... Please check internet connection.");
       return;
     }
 
@@ -122,7 +230,7 @@ export const FinanceProvider = ({ children }) => {
         localStorage.setItem("g_access_token", r.access_token);
         localStorage.setItem("g_token_expires", expiresAt.toString());
 
-        loadSheetData(r.access_token);
+        loadAllSheetsFromGoogle(r.access_token);
       }
     });
     client.requestAccessToken({ prompt: 'consent' });
@@ -133,52 +241,67 @@ export const FinanceProvider = ({ children }) => {
     setIsAuthenticated(false);
     localStorage.removeItem("g_access_token");
     localStorage.removeItem("g_token_expires");
+    setData(INITIAL_DATA);
   };
 
-  // Google Sheet API Operations (Append, Update, Delete)
-  const appendRowToSheet = async (values, targetSheet = 'Sheet1') => {
+  // Live Append Row to Google Sheet
+  const appendRowToSheet = async (values, sheetTabName) => {
     const token = accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
     try {
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetSheet)}!A:Z:append?valueInputOption=USER_ENTERED`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [values] })
-      });
-      console.log(`Appended row live to Google Sheet ${targetSheet}`);
+      await apiFetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A:Z:append?valueInputOption=USER_ENTERED`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [values] })
+        },
+        token
+      );
+      console.log(`Live appended row to Google Sheet tab: ${sheetTabName}`);
     } catch (e) {
-      console.warn(`Append row error on ${targetSheet}:`, e);
+      console.warn(`Append error on ${sheetTabName}:`, e);
     }
   };
 
+  // Live Update Row in Google Sheet
   const updateRowInSheet = async (sheetTabName, rowIndex, values) => {
     const token = accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
     try {
       const range = `${sheetTabName}!A${rowIndex}:H${rowIndex}`;
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ range, values: [values] })
-      });
-      console.log(`Updated row ${rowIndex} live in Google Sheet ${sheetTabName}`);
+      await apiFetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ range, values: [values] })
+        },
+        token
+      );
+      console.log(`Live updated row ${rowIndex} in Google Sheet tab: ${sheetTabName}`);
     } catch (e) {
-      console.warn(`Update row error on ${sheetTabName}:`, e);
+      console.warn(`Update error on ${sheetTabName}:`, e);
     }
   };
 
+  // Live Clear / Delete Row in Google Sheet
   const deleteRowInSheet = async (sheetTabName, rowIndex) => {
     const token = accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
     try {
       const range = `${sheetTabName}!A${rowIndex}:Z${rowIndex}`;
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}:clear`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-      });
-      console.log(`Cleared row ${rowIndex} live in Google Sheet ${sheetTabName}`);
+      await apiFetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}:clear`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        },
+        token
+      );
+      console.log(`Live cleared row ${rowIndex} in Google Sheet tab: ${sheetTabName}`);
     } catch (e) {
-      console.warn(`Clear row error on ${sheetTabName}:`, e);
+      console.warn(`Clear error on ${sheetTabName}:`, e);
     }
   };
 
@@ -250,11 +373,10 @@ export const FinanceProvider = ({ children }) => {
   const totalExpense = filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
 
-  // CRUD Operations with Live Google Sheet Sync
+  // Live CRUD Handlers targeting Google Sheets API v4
   const addTransaction = (tx) => {
     const newTx = { ...tx, id: 'tx-' + Date.now(), sheetRowIndex: data.transactions.length + 2 };
     setData(prev => ({ ...prev, transactions: [newTx, ...prev.transactions] }));
-
     appendRowToSheet([
       newTx.id, newTx.date, newTx.type, newTx.category, newTx.amount, newTx.paymentMethod, newTx.account, newTx.description
     ], 'Sheet1');
@@ -302,7 +424,7 @@ export const FinanceProvider = ({ children }) => {
   const addTrade = (trade) => {
     const newTrade = { ...trade, id: 'inv-' + Date.now() };
     setData(prev => ({ ...prev, investments: [...prev.investments, newTrade] }));
-    appendRowToSheet([newTrade.id, newTrade.name, newTrade.type, newTrade.quantity, newTrade.buyPrice, newTrade.currentPrice], 'Trade');
+    appendRowToSheet([newTrade.id, newTrade.name, newTrade.type, newTrade.action, newTrade.quantity, newTrade.buyPrice, newTrade.currentPrice], 'Trade');
   };
 
   const addLoanGiven = (loan) => {
@@ -320,6 +442,7 @@ export const FinanceProvider = ({ children }) => {
   return (
     <FinanceContext.Provider value={{
       data,
+      isLoading,
       selectedPeriod, setSelectedPeriod,
       customStartDate, setCustomStartDate,
       customEndDate, setCustomEndDate,
@@ -348,7 +471,8 @@ export const FinanceProvider = ({ children }) => {
       addBankAccount,
       addTrade,
       addLoanGiven,
-      addLoanTaken
+      addLoanTaken,
+      refreshData: loadAllSheetsFromGoogle
     }}>
       {children}
     </FinanceContext.Provider>
