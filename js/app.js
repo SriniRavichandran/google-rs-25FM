@@ -12,6 +12,7 @@ class AppRouter {
       'bank-accounts': window.BankAccountsModule,
       'cash-flow': window.CashFlowModule,
       'investments': window.InvestmentsModule,
+      'loans-given': window.LoansGivenModule,
       'budget': window.BudgetModule,
       'bills': window.BillsModule,
       'goals': window.GoalsModule,
@@ -244,6 +245,39 @@ class AppRouter {
       });
     }
 
+    // 6. Submit Handler: + Add Loan Given
+    const loanForm = document.getElementById('add-loan-form');
+    if (loanForm) {
+      loanForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(loanForm);
+        const amountGiven = parseFloat(formData.get('amountGiven')) || 0;
+        const amountRepaid = parseFloat(formData.get('amountRepaid')) || 0;
+
+        const newLoan = {
+          borrowerName: formData.get('borrowerName'),
+          amountGiven: amountGiven,
+          interestRate: parseFloat(formData.get('interestRate')) || 0,
+          dateGiven: formData.get('dateGiven') || new Date().toISOString().split('T')[0],
+          dueDate: formData.get('dueDate') || '',
+          amountRepaid: amountRepaid,
+          outstandingOwed: amountGiven - amountRepaid
+        };
+
+        window.StorageInstance.addLoanGiven(newLoan);
+
+        if (window.GoogleSheetsHandler) {
+          await window.GoogleSheetsHandler.appendRowToSheet([
+            newLoan.id, newLoan.borrowerName, newLoan.amountGiven, `${newLoan.interestRate}%`, newLoan.dateGiven, newLoan.dueDate, newLoan.amountRepaid, newLoan.outstandingOwed
+          ]);
+        }
+
+        this.closeModal('add-loan-modal');
+        loanForm.reset();
+        this.refreshCurrentModule();
+      });
+    }
+
     this.renderHeaderAuthState();
     this.navigateTo(this.currentView);
   }
@@ -280,10 +314,11 @@ class AppRouter {
     if (titleEl) {
       const titles = {
         'dashboard': 'Dashboard Overview',
-        'credit-cards': 'Credit Card Usage & Limits',
-        'bank-accounts': 'Debit Card & Bank Accounts',
-        'cash-flow': 'Cash Flow & Income / Expenses',
-        'investments': 'Trade & Investment Portfolio',
+        'credit-cards': 'Credit Cards (Credit)',
+        'bank-accounts': 'Debit Cards & Bank Accounts (Debit)',
+        'cash-flow': 'Cash Flow (Cash)',
+        'investments': 'Trade & Investments (Trade)',
+        'loans-given': 'Loans Given & Money Owed',
         'budget': 'Budget vs Actual Tracking',
         'bills': 'Bills & Subscriptions Tracker',
         'goals': 'Financial Goals & Milestones',
@@ -346,6 +381,7 @@ class AppRouter {
     const savingsRate = window.StorageInstance.getSavingsRate();
     const creditUtil = window.StorageInstance.getCreditCardUtilization();
     const totalLiquid = data.bankAccounts.reduce((s, a) => s + parseFloat(a.balance), 0);
+    const totalLoansOwed = window.StorageInstance.getTotalLoansGiven();
     const filteredTx = window.StorageInstance.getFilteredTransactions();
 
     container.innerHTML = `
@@ -364,7 +400,7 @@ class AppRouter {
           <div class="stat-widget">
             <div class="stat-label">Total Net Worth</div>
             <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(netWorth)}</div>
-            <div class="stat-change bull"><span>Liquid + Investments - Debt</span></div>
+            <div class="stat-change bull"><span>Liquid + Investments + Loans - Debt</span></div>
           </div>
         </div>
 
@@ -378,21 +414,17 @@ class AppRouter {
 
         <div class="glass-card glass-card-glow-blue">
           <div class="stat-widget">
-            <div class="stat-label">Liquid Cash Balance</div>
+            <div class="stat-label">Liquid Cash Balance (Debit)</div>
             <div class="stat-value" style="color: var(--sapphire-blue);">${Formatters.formatCurrency(totalLiquid)}</div>
-            <div class="stat-change bull"><span>Across ${data.bankAccounts.length} Bank Accounts</span></div>
+            <div class="stat-change bull"><span>Across ${data.bankAccounts.length} Accounts</span></div>
           </div>
         </div>
 
-        <div class="glass-card ${creditUtil > 50 ? 'glass-card-glow-red' : 'glass-card-glow-green'}">
+        <div class="glass-card glass-card-glow-green">
           <div class="stat-widget">
-            <div class="stat-label">Credit Card Utilization</div>
-            <div class="stat-value" style="color: ${creditUtil > 50 ? 'var(--bear-red)' : 'var(--bull-green)'};">
-              ${creditUtil.toFixed(1)}%
-            </div>
-            <div class="stat-change ${creditUtil > 50 ? 'bear' : 'bull'}">
-              <span>Limit Health: ${creditUtil < 30 ? 'Optimal' : creditUtil < 50 ? 'Moderate' : 'High Alert'}</span>
-            </div>
+            <div class="stat-label">Money Owed to Me (Loans)</div>
+            <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(totalLoansOwed)}</div>
+            <div class="stat-change bull"><span>Across ${data.loansGiven.length} Loans</span></div>
           </div>
         </div>
       </div>
@@ -413,6 +445,9 @@ class AppRouter {
         </button>
         <button class="btn btn-secondary" onclick="AppRouter.openModal('add-trade-modal')">
           + Log Trade / Asset
+        </button>
+        <button class="btn btn-secondary" onclick="AppRouter.openModal('add-loan-modal')">
+          + Add Loan Given
         </button>
       </div>
 

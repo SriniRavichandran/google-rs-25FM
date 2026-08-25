@@ -9,6 +9,7 @@ const CLEAN_DYNAMIC_DATA = {
   bankAccounts: [],
   transactions: [],
   investments: [],
+  loansGiven: [],
   budgets: [],
   bills: [],
   goals: []
@@ -28,6 +29,7 @@ class StorageEngine {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         this.data = JSON.parse(stored);
+        if (!this.data.loansGiven) this.data.loansGiven = [];
       }
     } catch (e) {
       console.warn('LocalStorage error:', e);
@@ -45,6 +47,34 @@ class StorageEngine {
 
   getData() {
     return this.data;
+  }
+
+  // Helper getters
+  getCreditCards() { return this.data.creditCards || []; }
+  getBankAccounts() { return this.data.bankAccounts || []; }
+  getInvestments() { return this.data.investments || []; }
+  getLoansGiven() { return this.data.loansGiven || []; }
+  getBills() { return this.data.bills || []; }
+  getBudgets() { return this.data.budgets || []; }
+
+  getTotalCreditLimit() {
+    return this.getCreditCards().reduce((sum, c) => sum + (parseFloat(c.limit) || 0), 0);
+  }
+
+  getTotalCreditOutstanding() {
+    return this.getCreditCards().reduce((sum, c) => sum + (parseFloat(c.outstanding) || 0), 0);
+  }
+
+  getTotalInvestedAmount() {
+    return this.getInvestments().reduce((sum, i) => sum + (parseFloat(i.investedAmount) || 0), 0);
+  }
+
+  getTotalPortfolioValue() {
+    return this.getInvestments().reduce((sum, i) => sum + (parseFloat(i.currentValue) || 0), 0);
+  }
+
+  getTotalLoansGiven() {
+    return this.getLoansGiven().reduce((sum, l) => sum + (parseFloat(l.outstandingOwed) || parseFloat(l.amountGiven) || 0), 0);
   }
 
   // Filter transactions by selected time period
@@ -92,13 +122,14 @@ class StorageEngine {
   getTotalNetWorth() {
     const bankTotal = this.data.bankAccounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
     const investmentTotal = this.data.investments.reduce((sum, i) => sum + (parseFloat(i.currentValue) || 0), 0);
+    const loansOwedToMe = this.getTotalLoansGiven();
     const totalLiabilities = this.data.creditCards.reduce((sum, c) => sum + (parseFloat(c.outstanding) || 0), 0);
-    return (bankTotal + investmentTotal) - totalLiabilities;
+    return (bankTotal + investmentTotal + loansOwedToMe) - totalLiabilities;
   }
 
   getCreditCardUtilization() {
-    const totalLimit = this.data.creditCards.reduce((sum, c) => sum + (parseFloat(c.limit) || 0), 0);
-    const totalOutstanding = this.data.creditCards.reduce((sum, c) => sum + (parseFloat(c.outstanding) || 0), 0);
+    const totalLimit = this.getTotalCreditLimit();
+    const totalOutstanding = this.getTotalCreditOutstanding();
     if (totalLimit === 0) return 0;
     return (totalOutstanding / totalLimit) * 100;
   }
@@ -116,7 +147,7 @@ class StorageEngine {
     return ((totalIncome - totalExpense) / totalIncome) * 100;
   }
 
-  // Dynamic Row Manipulations (Pushes to Google Sheet)
+  // Dynamic Row Manipulations
   addTransaction(tx) {
     tx.id = 'tx-' + Date.now();
     tx.sheetRowIndex = this.data.transactions.length + 2;
@@ -132,10 +163,26 @@ class StorageEngine {
       this.data.transactions.splice(idx, 1);
       this.save();
 
-      // Trigger Google Sheet clear if connected
       if (window.GoogleSheetsHandler && window.GoogleSheetsHandler.isConnected && removed.sheetRowIndex) {
         window.GoogleSheetsHandler.clearRange(`Cash_Flow!A${removed.sheetRowIndex}:H${removed.sheetRowIndex}`);
       }
+      return true;
+    }
+    return false;
+  }
+
+  addLoanGiven(loan) {
+    loan.id = 'loan-' + Date.now();
+    this.data.loansGiven.unshift(loan);
+    this.save();
+    return loan;
+  }
+
+  deleteLoanGiven(id) {
+    const idx = this.data.loansGiven.findIndex(l => l.id === id);
+    if (idx !== -1) {
+      this.data.loansGiven.splice(idx, 1);
+      this.save();
       return true;
     }
     return false;
