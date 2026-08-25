@@ -1,6 +1,6 @@
 /* ==========================================================================
    RS-25F MIND 3D Personal Finance Tracker — Google Sheets API Engine
-   Auto-Initializes & Integrates Sheet 1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik
+   Auto-Creates All Module Tabs & Headers on Single Sheet (1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik)
    ========================================================================== */
 
 class GoogleSheetsHandler {
@@ -26,6 +26,7 @@ class GoogleSheetsHandler {
         this.updateAuthUI(true, "Connected");
         try {
           await this.fetchSheetTabs();
+          await this.autoCreateAllModuleSheets();
           await this.loadSheet();
         } catch (e) {
           console.warn("Auto-restore session error:", e);
@@ -59,6 +60,7 @@ class GoogleSheetsHandler {
         
         try {
           await this.fetchSheetTabs();
+          await this.autoCreateAllModuleSheets();
           await this.loadSheet();
         } catch (e) {
           console.error("Login sheet load error:", e);
@@ -132,11 +134,74 @@ class GoogleSheetsHandler {
           return s.properties.title;
         });
         if (!this.availableSheets.includes(this.currentSheet)) {
-          this.currentSheet = this.availableSheets[0] || "Expense Tracking";
+          this.currentSheet = this.availableSheets[0] || "Sheet1";
         }
       }
     } catch (e) {
       console.warn("Could not fetch sheets:", e);
+    }
+  }
+
+  colName(n) {
+    let s = "";
+    while (n > 0) {
+      let r = (n - 1) % 26;
+      s = String.fromCharCode(65 + r) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
+  }
+
+  /* Automatically creates all missing module tabs & headers on Google Sheet */
+  async autoCreateAllModuleSheets() {
+    if (!this.accessToken) return;
+
+    const requiredSheets = [
+      { title: 'Debit', headers: ['ID', 'Account Name', 'Bank', 'Account Type', 'Balance', 'Account No'] },
+      { title: 'Credit', headers: ['ID', 'Card Name', 'Bank', 'Network', 'Limit', 'Outstanding', 'Due Date', 'Last 4'] },
+      { title: 'Cash', headers: ['ID', 'Date', 'Type', 'Category', 'Amount', 'Payment Method', 'Account', 'Description'] },
+      { title: 'Trade', headers: ['ID', 'Symbol', 'Asset Name', 'Type', 'Quantity', 'Avg Buy Price', 'Current Price', 'Invested Amount', 'Current Value', 'P&L'] },
+      { title: 'Given_Loan', headers: ['ID', 'Borrower Name', 'Amount Given', 'Interest Rate %', 'Date Given', 'Due Date', 'Amount Repaid', 'Outstanding Owed', 'Status'] },
+      { title: 'Taken_Loan', headers: ['ID', 'Lender Name', 'Amount Borrowed', 'Interest Rate %', 'Date Taken', 'Due Date', 'Amount Repaid', 'Outstanding Debt', 'Status'] },
+      { title: 'Bills_Subscriptions', headers: ['ID', 'Name', 'Category', 'Amount', 'Due Date', 'Status'] },
+      { title: 'Budget_vs_Actual', headers: ['ID', 'Category', 'Monthly Budget', 'Current Spent'] },
+      { title: 'Goals', headers: ['ID', 'Goal Name', 'Target Amount', 'Current Saved', 'Target Date'] },
+      { title: 'Reviews', headers: ['Review Period', 'Savings Rate %', 'Budget Adherence', 'Notes'] },
+      { title: 'Net_Worth', headers: ['Date', 'Total Assets', 'Total Liabilities', 'Net Worth'] }
+    ];
+
+    const missingSheets = requiredSheets.filter(req => !this.availableSheets.includes(req.title));
+
+    if (missingSheets.length === 0) return;
+
+    console.log(`Auto-creating ${missingSheets.length} module sheet tabs on Google Sheet 1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik...`);
+
+    const requests = missingSheets.map(s => ({
+      addSheet: {
+        properties: { title: s.title }
+      }
+    }));
+
+    try {
+      await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}:batchUpdate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requests })
+      });
+
+      for (const s of missingSheets) {
+        try {
+          await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${encodeURIComponent(s.title)}!A1:${this.colName(s.headers.length)}1?valueInputOption=USER_ENTERED`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ range: `${s.title}!A1`, values: [s.headers] })
+          });
+        } catch (hErr) {}
+      }
+
+      await this.fetchSheetTabs();
+    } catch (err) {
+      console.warn("Auto-create sheets warning:", err);
     }
   }
 
@@ -151,7 +216,6 @@ class GoogleSheetsHandler {
       try {
         res = await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${encodeURIComponent(range)}`);
       } catch (err) {
-        // Fallback to Sheet1!A:H
         res = await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/Sheet1!A:H`);
       }
 
@@ -217,6 +281,7 @@ class GoogleSheetsHandler {
     const rangesToTry = [
       `'${this.currentSheet}'!A:H`,
       'Sheet1!A:H',
+      'Cash!A:H',
       'Expense Tracking!A:H'
     ];
 
