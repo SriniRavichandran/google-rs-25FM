@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>RS-25F MIND — 3D Personal Finance Tracker</title>
+  <meta name="description" content="RS-25F MIND 3D Personal Finance Tracker for daily, weekly, monthly, quarterly, and yearly tracking with Google Sheets Sync.">
+
+  <!-- PWA Manifest & Web App Capabilities -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RS-25F MIND">
+  <link rel="apple-touch-icon" href="RS-25F Mind.png">
+  <meta name="theme-color" content="#070b14">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/3d-theme.css">
+
+  <!-- External Libraries CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- WebGL 3D Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- App Wrapper -->
+  <div class="app-container">
+
+    <!-- Sidebar Navigation Drawer -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="RS-25F Mind.png" alt="RS-25F MIND Emblem" class="sidebar-logo">
+        <div>
+          <div class="brand-title">RS-25F MIND</div>
+          <div class="brand-tagline">SMART FINANCE</div>
+        </div>
+      </div>
+
+      <!-- Scrollable Navigation Container -->
+      <div class="sidebar-nav-container">
+        <div class="nav-section-title">Core Modules</div>
+        <ul class="nav-menu">
+          <li>
+            <a href="#" class="nav-item active" data-view="dashboard">
+              <span class="nav-icon">📊</span> Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="credit-cards">
+              <span class="nav-icon">💳</span> Credit Card Usage
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="bank-accounts">
+              <span class="nav-icon">💳</span> Debit Card & Bank
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="cash-flow">
+              <span class="nav-icon">💰</span> Cash Flow
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="investments">
+              <span class="nav-icon">📈</span> Trade & Investments
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-section-title">Analytics & Tools</div>
+        <ul class="nav-menu">
+          <li>
+            <a href="#" class="nav-item" data-view="budget">
+              <span class="nav-icon">🎯</span> Budget vs Actual
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="bills">
+              <span class="nav-icon">🔄</span> Bills & Subscriptions
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="goals">
+              <span class="nav-icon">🏆</span> Financial Goals
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="reviews">
+              <span class="nav-icon">📅</span> Daily/Weekly Review
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-view="net-worth">
+              <span class="nav-icon">📈</span> Net-Worth Tracker
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sheet-status-card">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div id="syncDot" class="sync-dot offline"></div>
+            <span id="syncText" class="status-text">Sign In Required</span>
+          </div>
+          <button class="btn btn-google" style="padding: 0.35rem 0.6rem; font-size: 0.72rem;" onclick="googleLogin()">
+            Connect Sheet
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-wrapper">
+
+      <!-- Top Fixed Header -->
+      <header class="top-header">
+        <div class="header-title-container">
+          <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
+          <h1 class="page-title" id="page-title">Dashboard Overview</h1>
+        </div>
+
+        <div class="header-actions">
+          <!-- 8 Theme Preferences Dropdown Selector -->
+          <select id="themeSelect" class="theme-picker" onchange="changeTheme(this.value)" title="Choose Color Theme Preference">
+            <option value="relentless">🔥 RS-25 Crimson</option>
+            <option value="cyber">🎨 Cyber Cyan</option>
+            <option value="purple">💜 Purple Velvet</option>
+            <option value="emerald">🟢 Emerald Mint</option>
+            <option value="sunset">🌅 Sunset Amber</option>
+            <option value="ocean">🌊 Ocean Sapphire</option>
+            <option value="rose">🌸 Rose Gold</option>
+            <option value="lime">⚡ Neon Lime</option>
+            <option value="slate">🪙 Titanium Slate</option>
+          </select>
+
+          <!-- Install Mobile/Desktop PWA App Button -->
+          <button id="installPwaBtn" class="btn btn-secondary btn-sm" style="display: none;" onclick="installPWAApp()">
+            📱 Install App
+          </button>
+
+          <!-- Google Auth Buttons -->
+          <button id="loginBtn" class="btn btn-google" onclick="googleLogin()">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/></svg>
+            Sign in with Google
+          </button>
+          <button id="logoutBtn" class="btn btn-danger btn-sm" style="display:none" onclick="googleLogout()">Sign Out</button>
+
+          <button class="btn btn-primary" onclick="AppRouter.openModal('add-transaction-modal')">
+            <span>+ Add Row / Amount</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Sub Header: Time Period Tracker Bar (Daily, Weekly, Monthly, Yearly, Custom) -->
+      <div class="period-tracker-bar">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tracking Period:</span>
+          <button class="period-pill" data-period="daily">📅 Daily</button>
+          <button class="period-pill" data-period="weekly">📆 Weekly</button>
+          <button class="period-pill active" data-period="monthly">📅 Monthly</button>
+          <button class="period-pill" data-period="yearly">📆 Yearly</button>
+          <button class="period-pill" data-period="custom">⚙️ Custom Range</button>
+
+          <div id="custom-date-inputs" style="display: none; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
+            <input type="date" id="custom-start-date" class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.78rem; width: 130px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">to</span>
+            <input type="date" id="custom-end-date" class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.78rem; width: 130px;">
+            <button class="btn btn-primary btn-sm" id="apply-custom-dates">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Containers -->
+      <div id="dashboard-view" class="page-view active"></div>
+      <div id="credit-cards-view" class="page-view"></div>
+      <div id="bank-accounts-view" class="page-view"></div>
+      <div id="cash-flow-view" class="page-view"></div>
+      <div id="investments-view" class="page-view"></div>
+      <div id="budget-view" class="page-view"></div>
+      <div id="bills-view" class="page-view"></div>
+      <div id="goals-view" class="page-view"></div>
+      <div id="reviews-view" class="page-view"></div>
+      <div id="net-worth-view" class="page-view"></div>
+
+    </main>
+
+  </div>
+
+  <!-- Add Transaction / Row Modal -->
+  <div class="modal-overlay" id="add-transaction-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ Add Row / Amount to Google Sheet</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="add-transaction-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Transaction Type</label>
+            <select class="form-select" name="type" required>
+              <option value="expense">Expense (-)</option>
+              <option value="income">Income (+)</option>
+              <option value="investment">Investment Transfer</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Amount (₹)</label>
+              <input type="number" step="0.01" class="form-input" name="amount" placeholder="e.g. 1500" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-input" name="date" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" name="category" required>
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Salary">Salary</option>
+                <option value="Fuel & Commute">Fuel & Commute</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Mutual Funds">Mutual Funds</option>
+                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select" name="paymentMethod" required>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Account / Card Used</label>
+            <input type="text" class="form-input" name="account" placeholder="e.g. HDFC Regalia Gold" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description / Note</label>
+            <input type="text" class="form-input" name="description" placeholder="e.g. Dinner with friends">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-dismiss>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save to Sheet & App</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PWA & Theme Switcher Script -->
+  <script>
+    const THEMES = {
+      relentless: { "--bg-dark": "#0b0709", "--bull-green": "#10b981", "--bear-red": "#ef4444", "--amber-gold": "#f59e0b" },
+      cyber: { "--bg-dark": "#040b14", "--bull-green": "#06b6d4", "--bear-red": "#ef4444", "--amber-gold": "#f59e0b" },
+      purple: { "--bg-dark": "#0b0616", "--bull-green": "#a855f7", "--bear-red": "#ef4444", "--amber-gold": "#fbbf24" },
+      emerald: { "--bg-dark": "#020f0a", "--bull-green": "#10b981", "--bear-red": "#ef4444", "--amber-gold": "#f59e0b" },
+      sunset: { "--bg-dark": "#120903", "--bull-green": "#f59e0b", "--bear-red": "#ef4444", "--amber-gold": "#fbbf24" },
+      ocean: { "--bg-dark": "#040d18", "--bull-green": "#38bdf8", "--bear-red": "#ef4444", "--amber-gold": "#f59e0b" },
+      rose: { "--bg-dark": "#12050b", "--bull-green": "#f43f5e", "--bear-red": "#ef4444", "--amber-gold": "#fbbf24" },
+      lime: { "--bg-dark": "#070e03", "--bull-green": "#84cc16", "--bear-red": "#ef4444", "--amber-gold": "#f59e0b" },
+      slate: { "--bg-dark": "#0f172a", "--bull-green": "#64748b", "--bear-red": "#ef4444", "--amber-gold": "#f59e0b" }
+    };
+
+    function changeTheme(themeName) {
+      const theme = THEMES[themeName] || THEMES.relentless;
+      Object.keys(theme).forEach(key => {
+        document.documentElement.style.setProperty(key, theme[key]);
+      });
+      localStorage.setItem("app_theme", themeName);
+      const sel = document.getElementById("themeSelect");
+      if (sel) sel.value = themeName;
+    }
+
+    const savedTheme = localStorage.getItem("app_theme") || "relentless";
+    changeTheme(savedTheme);
+
+    // PWA Service Worker Registration & App Install Handler
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('installPwaBtn');
+      if (installBtn) installBtn.style.display = 'inline-flex';
+    });
+
+    function installPWAApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User installed PWA App');
+          }
+          deferredPrompt = null;
+          const installBtn = document.getElementById('installPwaBtn');
+          if (installBtn) installBtn.style.display = 'none';
+        });
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW Reg error:', err));
+      });
+    }
+  </script>
+
+  <!-- JavaScript Source Files -->
+  <script src=".env"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils/formatters.js"></script>
+  <script src="js/utils/charts.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/google-sheets-api.js"></script>
+  <script src="js/3d-scene.js"></script>
+
+  <script src="js/modules/credit-cards.js"></script>
+  <script src="js/modules/bank-accounts.js"></script>
+  <script src="js/modules/cash-flow.js"></script>
+  <script src="js/modules/investments.js"></script>
+  <script src="js/modules/budget.js"></script>
+  <script src="js/modules/bills.js"></script>
+  <script src="js/modules/goals.js"></script>
+  <script src="js/modules/reviews.js"></script>
+  <script src="js/modules/net-worth.js"></script>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
