@@ -1,6 +1,6 @@
 /* ==========================================================================
    RS-25F MIND 3D Personal Finance Tracker — Google Sheets API Engine
-   Derived from RS-25 Architecture Pattern
+   Auto-Initializes & Integrates Sheet 1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik
    ========================================================================== */
 
 class GoogleSheetsHandler {
@@ -151,11 +151,34 @@ class GoogleSheetsHandler {
       try {
         res = await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${encodeURIComponent(range)}`);
       } catch (err) {
-        // Fallback to Sheet1 or A:H if specific sheet tab name fails
+        // Fallback to Sheet1!A:H
         res = await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/Sheet1!A:H`);
       }
 
       const rawValues = res.values || [];
+
+      // Auto-initialize header row & starter entries if sheet is completely empty
+      if (rawValues.length === 0) {
+        console.log("Empty sheet detected. Initializing headers on Google Sheet...");
+        const initialRows = [
+          ["ID", "Date", "Type", "Category", "Amount", "Payment Method", "Account", "Description"],
+          ["TX-1001", new Date().toISOString().split('T')[0], "income", "Salary", "75000", "Bank Transfer", "HDFC Savings", "Monthly Salary Credit"],
+          ["TX-1002", new Date().toISOString().split('T')[0], "expense", "Food & Dining", "1250", "UPI", "GooglePay (HDFC)", "Dinner with family"],
+          ["TX-1003", new Date().toISOString().split('T')[0], "investment", "Mutual Funds", "10000", "Bank Transfer", "Zerodha Coin", "Monthly SIP Investment"]
+        ];
+
+        try {
+          await this.api(`https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/Sheet1!A1:H4?valueInputOption=USER_ENTERED`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ range: "Sheet1!A1:H4", values: initialRows })
+          });
+          console.log("Successfully initialized headers and starter rows on Google Sheet!");
+          return await this.loadSheet();
+        } catch (initErr) {
+          console.warn("Auto header init warning:", initErr);
+        }
+      }
 
       if (rawValues.length > 1) {
         const parsedTransactions = rawValues.slice(1).map((r, idx) => ({

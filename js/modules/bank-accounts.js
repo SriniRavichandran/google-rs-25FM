@@ -1,54 +1,76 @@
 /* ==========================================================================
-   RS-25F MIND 3D Personal Finance Tracker — Bank Accounts & Debit Cards Module
+   RS-25F MIND 3D Personal Finance Tracker — Debit Card & Bank Accounts Module
    ========================================================================== */
 
-const BankAccountsModule = {
+class BankAccountsModule {
   render(container) {
-    const data = window.StorageInstance.getData();
-    const accounts = data.bankAccounts;
-    const totalLiquidCash = accounts.reduce((sum, a) => sum + parseFloat(a.balance), 0);
+    const accounts = window.StorageInstance.getBankAccounts();
+    const totalLiquid = accounts.reduce((s, a) => s + parseFloat(a.balance), 0);
 
     container.innerHTML = `
       <div class="section-header">
         <div>
-          <h2 class="section-title">💳 Bank Accounts & Debit Cards</h2>
-          <p style="color: var(--text-muted); font-size: 0.88rem;">Track checking, savings, salary, and liquid cash balances</p>
+          <h2 style="font-size: 1.5rem; font-weight: 800;">💳 Debit Cards & Bank Accounts</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Track liquid cash, bank balances, savings, and debit card accounts</p>
         </div>
         <button class="btn btn-primary" onclick="AppRouter.openModal('add-bank-account-modal')">
-          <span>+ Add Bank Account</span>
+          + Add Bank Account
         </button>
       </div>
 
-      <div class="grid-3" style="margin-bottom: 2rem;">
+      <!-- Key Metrics Row -->
+      <div class="grid-3">
         <div class="glass-card glass-card-glow-green">
           <div class="stat-widget">
-            <div class="stat-label">Total Liquid Cash</div>
-            <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(totalLiquidCash)}</div>
-            <div class="stat-change bull"><span>Available across ${accounts.length} Accounts</span></div>
+            <div class="stat-label">Total Liquid Balance</div>
+            <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(totalLiquid)}</div>
+            <div class="stat-change bull"><span>Available Cash</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card glass-card-glow-blue">
+          <div class="stat-widget">
+            <div class="stat-label">Bank Accounts Connected</div>
+            <div class="stat-value" style="color: var(--sapphire-blue);">${accounts.length}</div>
+            <div class="stat-change bull"><span>Active Liquidity</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card glass-card-glow-gold">
+          <div class="stat-widget">
+            <div class="stat-label">Average Balance / Account</div>
+            <div class="stat-value" style="color: var(--amber-gold);">
+              ${Formatters.formatCurrency(accounts.length ? totalLiquid / accounts.length : 0)}
+            </div>
+            <div class="stat-change bull"><span>Balanced Reserve</span></div>
           </div>
         </div>
       </div>
 
+      <!-- Bank Accounts Grid -->
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin: 1.5rem 0 1rem;">🏦 Registered Bank & Debit Card Accounts</h3>
       <div class="grid-3">
-        ${accounts.map(acc => `
-          <div class="glass-card">
+        ${accounts.length === 0 ? `
+          <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+            <p style="color: var(--text-muted);">No bank accounts added yet.</p>
+            <button class="btn btn-primary" style="margin-top: 1rem;" onclick="AppRouter.openModal('add-bank-account-modal')">
+              + Add Bank Account
+            </button>
+          </div>
+        ` : accounts.map(a => `
+          <div class="glass-card glass-card-glow-blue">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
               <div>
-                <span class="badge badge-investment">${acc.type}</span>
-                <h3 style="font-size: 1.15rem; font-weight: 700; margin-top: 0.4rem;">${acc.name}</h3>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">${acc.bank}</p>
+                <h4 style="font-size: 1.1rem; font-weight: 700;">${a.name}</h4>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">${a.bank} • ${a.type}</span>
               </div>
-              <div style="font-size: 1.5rem;">🏦</div>
+              <span class="badge badge-income">**** ${a.accountNumber}</span>
             </div>
 
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-              <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim); font-weight: 600;">Current Balance</div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: var(--bull-green); font-family: 'JetBrains Mono', monospace; margin: 0.2rem 0;">
-                ${Formatters.formatCurrency(acc.balance)}
-              </div>
-              <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between;">
-                <span>Account No:</span>
-                <strong>${acc.accountNo}</strong>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">Available Balance</div>
+              <div style="font-size: 1.6rem; font-weight: 800; color: var(--bull-green); font-family: 'JetBrains Mono';">
+                ${Formatters.formatCurrency(a.balance)}
               </div>
             </div>
           </div>
@@ -56,6 +78,6 @@ const BankAccountsModule = {
       </div>
     `;
   }
-};
+}
 
-window.BankAccountsModule = BankAccountsModule;
+window.BankAccountsModule = new BankAccountsModule();

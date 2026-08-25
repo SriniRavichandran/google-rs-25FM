@@ -194,7 +194,7 @@
 
   </div>
 
-  <!-- Add Transaction / Row Modal -->
+  <!-- 1. Modal: + Add Row / Amount (Dashboard) -->
   <div class="modal-overlay" id="add-transaction-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -262,6 +262,207 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-modal-dismiss>Cancel</button>
           <button type="submit" class="btn btn-primary">Save to Sheet & App</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Modal: + Add New Credit Card -->
+  <div class="modal-overlay" id="add-credit-card-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">💳 Add New Credit Card</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="add-credit-card-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Card Name</label>
+            <input type="text" class="form-input" name="name" placeholder="e.g. HDFC Regalia Gold" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Bank Name</label>
+              <input type="text" class="form-input" name="bank" placeholder="e.g. HDFC Bank" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Card Network</label>
+              <select class="form-select" name="network">
+                <option value="Visa">Visa</option>
+                <option value="Mastercard">Mastercard</option>
+                <option value="RuPay">RuPay</option>
+                <option value="Amex">American Express</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Total Limit (₹)</label>
+              <input type="number" class="form-input" name="limit" placeholder="e.g. 300000" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Outstanding Balance (₹)</label>
+              <input type="number" class="form-input" name="outstanding" placeholder="e.g. 45000" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Due Date (Day of Month)</label>
+            <input type="number" min="1" max="31" class="form-input" name="dueDate" placeholder="e.g. 15" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-dismiss>Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Credit Card</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Modal: Add Bank Account -->
+  <div class="modal-overlay" id="add-bank-account-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🏦 Add Bank Account / Debit Card</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="add-bank-account-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Account Name</label>
+            <input type="text" class="form-input" name="name" placeholder="e.g. Salary Savings Account" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Bank Name</label>
+              <input type="text" class="form-input" name="bank" placeholder="e.g. ICICI Bank" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Type</label>
+              <select class="form-select" name="type">
+                <option value="Savings">Savings Account</option>
+                <option value="Current">Current Account</option>
+                <option value="Salary">Salary Account</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Available Balance (₹)</label>
+              <input type="number" step="0.01" class="form-input" name="balance" placeholder="e.g. 85000" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Number (Last 4 Digits)</label>
+              <input type="text" class="form-input" name="accountNumber" placeholder="e.g. 4321" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-dismiss>Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Modal: + Add Transaction (Cash Flow) -->
+  <div class="modal-overlay" id="add-cashflow-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">💰 Log Cash Flow Transaction</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="add-cashflow-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="type" required>
+              <option value="income">Income (+)</option>
+              <option value="expense">Expense (-)</option>
+              <option value="investment">Investment Transfer</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Amount (₹)</label>
+              <input type="number" step="0.01" class="form-input" name="amount" placeholder="e.g. 5000" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-input" name="date" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <input type="text" class="form-input" name="category" placeholder="e.g. Salary, Groceries" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account</label>
+              <input type="text" class="form-input" name="account" placeholder="e.g. HDFC Main" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description / Memo</label>
+            <input type="text" class="form-input" name="description" placeholder="e.g. Monthly Rent Payment">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-dismiss>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Cash Flow Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Modal: + Log Trade / Asset -->
+  <div class="modal-overlay" id="add-trade-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📈 Log Trade / Asset Position</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="add-trade-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Asset / Stock Name</label>
+            <input type="text" class="form-input" name="name" placeholder="e.g. NIFTY 50 ETF, RELIANCE, Bitcoin" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Asset Type</label>
+              <select class="form-select" name="type">
+                <option value="Equity">Equity Stock</option>
+                <option value="Mutual Fund">Mutual Fund / ETF</option>
+                <option value="Crypto">Cryptocurrency</option>
+                <option value="Gold">Gold / Commodity</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Trade Action</label>
+              <select class="form-select" name="action">
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity</label>
+              <input type="number" step="0.0001" class="form-input" name="quantity" placeholder="e.g. 50" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Avg Buy Price (₹)</label>
+              <input type="number" step="0.01" class="form-input" name="buyPrice" placeholder="e.g. 2450" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Current Market Price (₹)</label>
+            <input type="number" step="0.01" class="form-input" name="currentPrice" placeholder="e.g. 2680" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-dismiss>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Trade Position</button>
         </div>
       </form>
     </div>

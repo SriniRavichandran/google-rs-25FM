@@ -2,119 +2,116 @@
    RS-25F MIND 3D Personal Finance Tracker — Trade & Investments Module
    ========================================================================== */
 
-const InvestmentsModule = {
+class InvestmentsModule {
   render(container) {
-    const data = window.StorageInstance.getData();
-    const investments = data.investments;
-
-    const totalInvested = investments.reduce((sum, i) => sum + parseFloat(i.investedAmount), 0);
-    const totalCurrentValue = investments.reduce((sum, i) => sum + parseFloat(i.currentValue), 0);
-    const totalPnL = totalCurrentValue - totalInvested;
-    const pnlPercent = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
+    const investments = window.StorageInstance.getInvestments();
+    const totalInvested = window.StorageInstance.getTotalInvestedAmount();
+    const totalValue = window.StorageInstance.getTotalPortfolioValue();
+    const totalPnL = totalValue - totalInvested;
+    const pnlPercentage = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
 
     container.innerHTML = `
       <div class="section-header">
         <div>
-          <h2 class="section-title">📈 Trade & Investment Portfolio</h2>
-          <p style="color: var(--text-muted); font-size: 0.88rem;">Stocks, ETFs, Crypto, Mutual Funds buy/sell logs, P&L & portfolio value</p>
+          <h2 style="font-size: 1.5rem; font-weight: 800;">📈 Trade & Investment Portfolio</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Track buy/sell positions, invested capital, current market value, and unrealized P&L</p>
         </div>
-        <button class="btn btn-primary" onclick="AppRouter.openModal('add-investment-modal')">
-          <span>+ Log Trade / Asset</span>
+        <button class="btn btn-primary" onclick="AppRouter.openModal('add-trade-modal')">
+          + Log Trade / Asset
         </button>
       </div>
 
+      <!-- Key Metrics Row -->
       <div class="grid-4">
         <div class="glass-card glass-card-glow-blue">
           <div class="stat-widget">
-            <div class="stat-label">Total Invested Principal</div>
-            <div class="stat-value">${Formatters.formatCurrency(totalInvested)}</div>
-            <div class="stat-change bull"><span>Original Purchase Value</span></div>
+            <div class="stat-label">Total Invested Capital</div>
+            <div class="stat-value" style="color: var(--sapphire-blue);">${Formatters.formatCurrency(totalInvested)}</div>
+            <div class="stat-change bull"><span>Principal Capital</span></div>
           </div>
         </div>
 
         <div class="glass-card glass-card-glow-green">
           <div class="stat-widget">
             <div class="stat-label">Current Portfolio Value</div>
-            <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(totalCurrentValue)}</div>
-            <div class="stat-change bull"><span>Live Portfolio Worth</span></div>
+            <div class="stat-value" style="color: var(--bull-green);">${Formatters.formatCurrency(totalValue)}</div>
+            <div class="stat-change bull"><span>Market Value</span></div>
           </div>
         </div>
 
         <div class="glass-card ${totalPnL >= 0 ? 'glass-card-glow-green' : 'glass-card-glow-red'}">
           <div class="stat-widget">
-            <div class="stat-label">Total Realized & Unrealized P&L</div>
+            <div class="stat-label">Total Profit & Loss (P&L)</div>
             <div class="stat-value" style="color: ${totalPnL >= 0 ? 'var(--bull-green)' : 'var(--bear-red)'};">
               ${totalPnL >= 0 ? '+' : ''}${Formatters.formatCurrency(totalPnL)}
             </div>
             <div class="stat-change ${totalPnL >= 0 ? 'bull' : 'bear'}">
-              <span>Overall Return: ${Formatters.formatPercent(pnlPercent)}</span>
+              <span>Returns</span>
             </div>
           </div>
         </div>
 
-        <div class="glass-card glass-card-glow-gold">
+        <div class="glass-card ${pnlPercentage >= 0 ? 'glass-card-glow-green' : 'glass-card-glow-red'}">
           <div class="stat-widget">
-            <div class="stat-label">Active Holdings</div>
-            <div class="stat-value">${investments.length}</div>
-            <div class="stat-change bull"><span>Across Stocks, ETFs, Crypto</span></div>
+            <div class="stat-label">Portfolio ROI %</div>
+            <div class="stat-value" style="color: ${pnlPercentage >= 0 ? 'var(--bull-green)' : 'var(--bear-red)'};">
+              ${pnlPercentage >= 0 ? '+' : ''}${pnlPercentage.toFixed(2)}%
+            </div>
+            <div class="stat-change ${pnlPercentage >= 0 ? 'bull' : 'bear'}">
+              <span>Overall Gain</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="grid-2">
-        <!-- Asset Allocation Chart -->
-        <div class="glass-card">
-          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Portfolio Asset Distribution</h3>
-          <div style="height: 280px; position: relative;">
-            <canvas id="portfolio-chart"></canvas>
-          </div>
-        </div>
-
-        <!-- Holdings Table -->
-        <div class="glass-card">
-          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Asset Holdings & Returns</h3>
-          <div class="table-container" style="max-height: 280px; overflow-y: auto;">
-            <table class="glass-table">
-              <thead>
+      <!-- Investment Holdings Table -->
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin: 1.5rem 0 1rem;">💼 Active Holdings & Positions</h3>
+      <div class="glass-card">
+        <div class="table-container">
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th>Asset Name</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Avg Buy Price</th>
+                <th>Current Price</th>
+                <th>Invested Amount</th>
+                <th>Current Value</th>
+                <th>P&L (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${investments.length === 0 ? `
                 <tr>
-                  <th>Symbol</th>
-                  <th>Qty</th>
-                  <th>Avg Price</th>
-                  <th>Cur Price</th>
-                  <th>P&L (₹)</th>
+                  <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    No trade positions logged yet. Click <strong>"+ Log Trade / Asset"</strong> to add an investment!
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                ${investments.map(inv => {
-                  const pnl = inv.currentValue - inv.investedAmount;
-                  const pnlPct = inv.investedAmount > 0 ? (pnl / inv.investedAmount) * 100 : 0;
-                  return `
-                    <tr>
-                      <td>
-                        <strong>${inv.symbol}</strong><br>
-                        <span style="font-size: 0.72rem; color: var(--text-muted);">${inv.type}</span>
-                      </td>
-                      <td>${inv.quantity}</td>
-                      <td>${Formatters.formatCurrency(inv.avgBuyPrice)}</td>
-                      <td>${Formatters.formatCurrency(inv.currentPrice)}</td>
-                      <td style="font-weight: 700; color: ${pnl >= 0 ? 'var(--bull-green)' : 'var(--bear-red)'};">
-                        ${pnl >= 0 ? '+' : ''}${Formatters.formatCurrency(pnl)}<br>
-                        <span style="font-size: 0.72rem;">(${Formatters.formatPercent(pnlPct)})</span>
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
+              ` : investments.map(inv => {
+                const itemPnL = inv.currentValue - inv.investedAmount;
+                const itemRoi = inv.investedAmount > 0 ? (itemPnL / inv.investedAmount) * 100 : 0;
+                return `
+                  <tr>
+                    <td><strong>${inv.name}</strong></td>
+                    <td><span class="badge badge-investment">${inv.type}</span></td>
+                    <td>${inv.quantity}</td>
+                    <td>${Formatters.formatCurrency(inv.buyPrice)}</td>
+                    <td>${Formatters.formatCurrency(inv.currentPrice)}</td>
+                    <td>${Formatters.formatCurrency(inv.investedAmount)}</td>
+                    <td style="font-weight: 700;">${Formatters.formatCurrency(inv.currentValue)}</td>
+                    <td style="font-weight: 800; color: ${itemPnL >= 0 ? 'var(--bull-green)' : 'var(--bear-red)'};">
+                      ${itemPnL >= 0 ? '+' : ''}${Formatters.formatCurrency(itemPnL)} (${itemRoi.toFixed(1)}%)
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
     `;
-
-    setTimeout(() => {
-      ChartManager.renderPortfolioChart('portfolio-chart', investments);
-    }, 50);
   }
-};
+}
 
-window.InvestmentsModule = InvestmentsModule;
+window.InvestmentsModule = new InvestmentsModule();

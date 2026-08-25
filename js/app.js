@@ -80,12 +80,13 @@ class AppRouter {
     // Modal close listeners
     document.querySelectorAll('.modal-close, [data-modal-dismiss]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const openModal = document.querySelector('.modal-overlay.open');
-        if (openModal) openModal.classList.remove('open');
+        document.querySelectorAll('.modal-overlay.open').forEach(modal => {
+          modal.classList.remove('open');
+        });
       });
     });
 
-    // Handle Transaction Form Submit
+    // 1. Submit Handler: + Add Row / Amount (Dashboard)
     const txForm = document.getElementById('add-transaction-form');
     if (txForm) {
       txForm.addEventListener('submit', async (e) => {
@@ -103,7 +104,6 @@ class AppRouter {
         
         window.StorageInstance.addTransaction(newTx);
 
-        // Edit & Sync directly to Google Sheet
         if (window.GoogleSheetsHandler) {
           await window.GoogleSheetsHandler.appendRowToSheet([
             newTx.id, newTx.date, newTx.type, newTx.category, newTx.amount, newTx.paymentMethod, newTx.account, newTx.description
@@ -112,6 +112,134 @@ class AppRouter {
 
         this.closeModal('add-transaction-modal');
         txForm.reset();
+        this.refreshCurrentModule();
+      });
+    }
+
+    // 2. Submit Handler: + Add New Credit Card
+    const cardForm = document.getElementById('add-credit-card-form');
+    if (cardForm) {
+      cardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(cardForm);
+        const newCard = {
+          id: 'card-' + Date.now(),
+          name: formData.get('name'),
+          bank: formData.get('bank'),
+          limit: parseFloat(formData.get('limit')) || 0,
+          outstanding: parseFloat(formData.get('outstanding')) || 0,
+          dueDate: parseInt(formData.get('dueDate'), 10) || 1,
+          network: formData.get('network') || 'Visa'
+        };
+
+        window.StorageInstance.data.creditCards.push(newCard);
+        window.StorageInstance.save();
+
+        if (window.GoogleSheetsHandler) {
+          await window.GoogleSheetsHandler.appendRowToSheet([
+            newCard.id, new Date().toISOString().split('T')[0], 'credit_card', newCard.bank, newCard.outstanding, 'Credit Card', newCard.name, `Limit: ₹${newCard.limit}`
+          ]);
+        }
+
+        this.closeModal('add-credit-card-modal');
+        cardForm.reset();
+        this.refreshCurrentModule();
+      });
+    }
+
+    // 3. Submit Handler: + Add Bank Account
+    const bankForm = document.getElementById('add-bank-account-form');
+    if (bankForm) {
+      bankForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(bankForm);
+        const newBank = {
+          id: 'bank-' + Date.now(),
+          name: formData.get('name'),
+          bank: formData.get('bank'),
+          type: formData.get('type') || 'Savings',
+          balance: parseFloat(formData.get('balance')) || 0,
+          accountNumber: formData.get('accountNumber') || '0000'
+        };
+
+        window.StorageInstance.data.bankAccounts.push(newBank);
+        window.StorageInstance.save();
+
+        if (window.GoogleSheetsHandler) {
+          await window.GoogleSheetsHandler.appendRowToSheet([
+            newBank.id, new Date().toISOString().split('T')[0], 'bank_account', newBank.type, newBank.balance, 'Bank Account', newBank.name, `Acc: ****${newBank.accountNumber}`
+          ]);
+        }
+
+        this.closeModal('add-bank-account-modal');
+        bankForm.reset();
+        this.refreshCurrentModule();
+      });
+    }
+
+    // 4. Submit Handler: + Add Transaction (Cash Flow)
+    const cashflowForm = document.getElementById('add-cashflow-form');
+    if (cashflowForm) {
+      cashflowForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(cashflowForm);
+        const newTx = {
+          date: formData.get('date') || new Date().toISOString().split('T')[0],
+          type: formData.get('type'),
+          category: formData.get('category'),
+          amount: parseFloat(formData.get('amount')),
+          paymentMethod: 'Bank Transfer',
+          account: formData.get('account'),
+          description: formData.get('description')
+        };
+
+        window.StorageInstance.addTransaction(newTx);
+
+        if (window.GoogleSheetsHandler) {
+          await window.GoogleSheetsHandler.appendRowToSheet([
+            newTx.id, newTx.date, newTx.type, newTx.category, newTx.amount, newTx.paymentMethod, newTx.account, newTx.description
+          ]);
+        }
+
+        this.closeModal('add-cashflow-modal');
+        cashflowForm.reset();
+        this.refreshCurrentModule();
+      });
+    }
+
+    // 5. Submit Handler: + Log Trade / Asset
+    const tradeForm = document.getElementById('add-trade-form');
+    if (tradeForm) {
+      tradeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(tradeForm);
+        const qty = parseFloat(formData.get('quantity')) || 0;
+        const buyPx = parseFloat(formData.get('buyPrice')) || 0;
+        const curPx = parseFloat(formData.get('currentPrice')) || 0;
+
+        const newInvestment = {
+          id: 'inv-' + Date.now(),
+          name: formData.get('name'),
+          type: formData.get('type'),
+          quantity: qty,
+          buyPrice: buyPx,
+          currentPrice: curPx,
+          investedAmount: qty * buyPx,
+          currentValue: qty * curPx,
+          pnl: (qty * curPx) - (qty * buyPx)
+        };
+
+        window.StorageInstance.data.investments.push(newInvestment);
+        window.StorageInstance.save();
+
+        if (window.GoogleSheetsHandler) {
+          await window.GoogleSheetsHandler.appendRowToSheet([
+            newInvestment.id, new Date().toISOString().split('T')[0], 'investment', newInvestment.type, newInvestment.investedAmount, formData.get('action'), newInvestment.name, `Qty: ${qty} @ ₹${buyPx}`
+          ]);
+        }
+
+        this.closeModal('add-trade-modal');
+        tradeForm.reset();
         this.refreshCurrentModule();
       });
     }
@@ -269,16 +397,32 @@ class AppRouter {
         </div>
       </div>
 
+      <!-- Quick Action Buttons Bar -->
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        <button class="btn btn-primary" onclick="AppRouter.openModal('add-transaction-modal')">
+          + Add Row / Amount
+        </button>
+        <button class="btn btn-secondary" onclick="AppRouter.openModal('add-credit-card-modal')">
+          + Add New Credit Card
+        </button>
+        <button class="btn btn-secondary" onclick="AppRouter.openModal('add-bank-account-modal')">
+          + Add Bank Account
+        </button>
+        <button class="btn btn-secondary" onclick="AppRouter.openModal('add-cashflow-modal')">
+          + Add Transaction
+        </button>
+        <button class="btn btn-secondary" onclick="AppRouter.openModal('add-trade-modal')">
+          + Log Trade / Asset
+        </button>
+      </div>
+
       <!-- Live Dynamic Spreadsheet Transaction Manager -->
-      <div style="margin-top: 1.5rem;">
+      <div>
         <div class="section-header">
           <div>
             <h3 style="font-size: 1.15rem; font-weight: 700;">🧾 Google Sheet Live Transaction Log (${window.StorageInstance.selectedPeriod.toUpperCase()})</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted);">Direct live sync to Google Sheet1</p>
           </div>
-          <button class="btn btn-primary" onclick="AppRouter.openModal('add-transaction-modal')">
-            <span>+ Add Row / Amount</span>
-          </button>
         </div>
 
         <div class="glass-card">
