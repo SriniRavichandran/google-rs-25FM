@@ -71,13 +71,10 @@ export const FinanceProvider = ({ children }) => {
     return r.json();
   };
 
-  // Ensure all 11 required module sheet tabs exist in Google Sheets and update headers + freeze Row 1
+  // Ensure all 11 required module sheet tabs exist, shift data down if Row 1 has data, and write headers + freeze Row 1
   const autoCreateModuleTabs = async (tokenOverride = null) => {
     const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
-    if (!token) {
-      console.warn("Cannot update sheet headers: Google Sign In is required.");
-      return;
-    }
+    if (!token) return;
 
     try {
       const meta = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {}, token);
@@ -98,41 +95,74 @@ export const FinanceProvider = ({ children }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ requests: createRequests })
         }, token);
-        console.log("Auto-created missing sheet tabs:", missing);
       }
 
-      // Re-fetch sheet metadata to freeze Row 1 headers
+      // Re-fetch sheet metadata to inspect Row 1 and freeze headers
       const updatedMeta = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {}, token);
-      if (updatedMeta && updatedMeta.sheets) {
-        const freezeRequests = [];
-        updatedMeta.sheets.forEach(s => {
-          const sProps = s.properties;
-          if (requiredTabs.includes(sProps.title)) {
-            if (!sProps.gridProperties || sProps.gridProperties.frozenRowCount < 1) {
-              freezeRequests.push({
-                updateSheetProperties: {
-                  properties: {
-                    sheetId: sProps.sheetId,
-                    gridProperties: { frozenRowCount: 1 }
-                  },
-                  fields: 'gridProperties.frozenRowCount'
-                }
-              });
-            }
-          }
-        });
+      if (!updatedMeta || !updatedMeta.sheets) return;
 
-        if (freezeRequests.length > 0) {
-          await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ requests: freezeRequests })
-          }, token);
-          console.log("Fixed & frozen Header Row 1 across all Google Sheets tabs!");
+      const batchInsertRequests = [];
+      const freezeRequests = [];
+
+      for (const sheetObj of updatedMeta.sheets) {
+        const sProps = sheetObj.properties;
+        const tabTitle = sProps.title;
+
+        if (SHEET_HEADER_CONFIG[tabTitle]) {
+          // Check if Row 1 already contains header "ID"
+          const checkRes = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:A1`, {}, token);
+          const firstCellValue = checkRes?.values?.[0]?.[0] || '';
+
+          // If Row 1 contains actual data (e.g. "loan-taken-1787..." or "card-123...") instead of header "ID", insert 1 row at index 0 to shift data down
+          if (firstCellValue && firstCellValue !== 'ID') {
+            console.log(`Shifting data down in tab ${tabTitle} to insert header row...`);
+            batchInsertRequests.push({
+              insertDimension: {
+                range: {
+                  sheetId: sProps.sheetId,
+                  dimension: 'ROWS',
+                  startIndex: 0,
+                  endIndex: 1
+                },
+                inheritFromBefore: false
+              }
+            });
+          }
+
+          // Ensure Row 1 is frozen
+          if (!sProps.gridProperties || sProps.gridProperties.frozenRowCount < 1) {
+            freezeRequests.push({
+              updateSheetProperties: {
+                properties: {
+                  sheetId: sProps.sheetId,
+                  gridProperties: { frozenRowCount: 1 }
+                },
+                fields: 'gridProperties.frozenRowCount'
+              }
+            });
+          }
         }
       }
 
-      // 2. Atomic Single values:batchUpdate POST Request for ALL 11 Sheet Headers
+      // Execute row insertions if data needs to be shifted down
+      if (batchInsertRequests.length > 0) {
+        await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requests: batchInsertRequests })
+        }, token);
+      }
+
+      // Execute row freezing
+      if (freezeRequests.length > 0) {
+        await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requests: freezeRequests })
+        }, token);
+      }
+
+      // Write header arrays to Row 1 for ALL tabs
       const headerBatchData = requiredTabs.map(tabTitle => {
         const headers = SHEET_HEADER_CONFIG[tabTitle];
         return {
@@ -153,9 +183,9 @@ export const FinanceProvider = ({ children }) => {
         },
         token
       );
-      console.log("Atomically updated all 11 sheet headers in Google Sheets!");
+      console.log("Successfully fixed, shifted data down, and updated headers across all 11 tabs!");
     } catch (err) {
-      console.warn("Auto create tabs & update headers warning:", err);
+      console.warn("Auto create tabs & shift headers warning:", err);
     }
   };
 
@@ -175,53 +205,62 @@ export const FinanceProvider = ({ children }) => {
       if (json && json.valueRanges) {
         const ranges = json.valueRanges;
 
+        // Helper to extract rows starting from index 1 (skipping header row)
+        const extractRows = (rangeObj) => {
+          const raw = rangeObj?.values || [];
+          if (raw.length === 0) return [];
+          // If first row is header ID, skip it
+          if (raw[0]?.[0] === 'ID') return raw.slice(1);
+          return raw;
+        };
+
         // 1. Transactions (Sheet1)
-        const parsedTx = (ranges[0]?.values || []).slice(1).map((r, idx) => ({
+        const parsedTx = extractRows(ranges[0]).map((r, idx) => ({
           id: r[0] || `tx-${idx + 2}`, sheetRowIndex: idx + 2, date: r[1] || new Date().toISOString().split('T')[0], type: (r[2] || 'expense').toLowerCase(), category: r[3] || 'General', amount: parseFloat(r[4]) || 0, paymentMethod: r[5] || 'Cash', account: r[6] || 'Main Account', description: r[7] || ''
         }));
 
         // 2. Credit Cards (Credit)
-        const parsedCredit = (ranges[1]?.values || []).slice(1).map((r, idx) => ({
+        const parsedCredit = extractRows(ranges[1]).map((r, idx) => ({
           id: r[0] || `card-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Credit Card', bank: r[2] || 'Bank', network: r[3] || 'Visa', limit: parseFloat(r[4]) || 0, outstanding: parseFloat(r[5]) || 0, dueDate: parseInt(r[6], 10) || 15
         }));
 
         // 3. Debit / Bank Accounts (Debit)
-        const parsedBank = (ranges[2]?.values || []).slice(1).map((r, idx) => ({
+        const parsedBank = extractRows(ranges[2]).map((r, idx) => ({
           id: r[0] || `bank-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Bank Account', bank: r[2] || 'Bank', type: r[3] || 'Savings', balance: parseFloat(r[4]) || 0, accountNumber: r[5] || '0000'
         }));
 
         // 4. Trade / Investments (Trade)
-        const parsedTrade = (ranges[3]?.values || []).slice(1).map((r, idx) => ({
+        const parsedTrade = extractRows(ranges[3]).map((r, idx) => ({
           id: r[0] || `inv-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Asset', type: r[2] || 'Equity', action: r[3] || 'BUY', quantity: parseFloat(r[4]) || 0, buyPrice: parseFloat(r[5]) || 0, currentPrice: parseFloat(r[6]) || 0, investedAmount: (parseFloat(r[4]) || 0) * (parseFloat(r[5]) || 0), currentValue: (parseFloat(r[4]) || 0) * (parseFloat(r[6]) || 0)
         }));
 
         // 5. Loans Given (Given_Loan)
-        const parsedGiven = (ranges[4]?.values || []).slice(1).map((r, idx) => ({
+        const parsedGiven = extractRows(ranges[4]).map((r, idx) => ({
           id: r[0] || `given-${idx + 2}`, sheetRowIndex: idx + 2, borrowerName: r[1] || 'Borrower', amountGiven: parseFloat(r[2]) || 0, interestRate: parseFloat(r[3]) || 0, dateGiven: r[4] || '', dueDate: r[5] || '', amountRepaid: parseFloat(r[6]) || 0, outstandingOwed: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
         }));
 
         // 6. Loans Taken (Taken_Loan)
-        const parsedTaken = (ranges[5]?.values || []).slice(1).map((r, idx) => ({
+        const parsedTaken = extractRows(ranges[5]).map((r, idx) => ({
           id: r[0] || `taken-${idx + 2}`, sheetRowIndex: idx + 2, lenderName: r[1] || 'Lender', amountTaken: parseFloat(r[2]) || 0, interestRate: parseFloat(r[3]) || 0, dateTaken: r[4] || '', dueDate: r[5] || '', amountRepaid: parseFloat(r[6]) || 0, outstandingBalance: parseFloat(r[7]) || ((parseFloat(r[2]) || 0) - (parseFloat(r[6]) || 0))
         }));
 
         // 7. Budget vs Actual (Budget_vs_Actual)
-        const parsedBudget = (ranges[6]?.values || []).slice(1).map((r, idx) => ({
+        const parsedBudget = extractRows(ranges[6]).map((r, idx) => ({
           id: r[0] || `budget-${idx + 2}`, sheetRowIndex: idx + 2, category: r[1] || 'General', budgetAmount: parseFloat(r[2]) || 0
         }));
 
         // 8. Bills & Subscriptions (Bills_Subscriptions)
-        const parsedBills = (ranges[7]?.values || []).slice(1).map((r, idx) => ({
+        const parsedBills = extractRows(ranges[7]).map((r, idx) => ({
           id: r[0] || `bill-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Service', category: r[2] || 'Subscription', amount: parseFloat(r[3]) || 0, dueDate: r[4] || '5', status: r[5] || 'DUE'
         }));
 
         // 9. Financial Goals (Goals)
-        const parsedGoals = (ranges[8]?.values || []).slice(1).map((r, idx) => ({
+        const parsedGoals = extractRows(ranges[8]).map((r, idx) => ({
           id: r[0] || `goal-${idx + 2}`, sheetRowIndex: idx + 2, title: r[1] || 'Goal', targetAmount: parseFloat(r[2]) || 0, savedAmount: parseFloat(r[3]) || 0, targetDate: r[4] || ''
         }));
 
         // 10. Reviews (Reviews)
-        const parsedReviews = (ranges[9]?.values || []).slice(1).map((r, idx) => ({
+        const parsedReviews = extractRows(ranges[9]).map((r, idx) => ({
           id: r[0] || `review-${idx + 2}`, sheetRowIndex: idx + 2, date: r[1] || '', type: r[2] || 'Weekly Review', grade: r[3] || 'A', notes: r[4] || ''
         }));
 
@@ -278,7 +317,7 @@ export const FinanceProvider = ({ children }) => {
         localStorage.setItem("g_token_expires", expiresAt.toString());
 
         await loadAllSheetsFromGoogle(r.access_token);
-        alert("Google Sheet connected! All 11 tab headers updated and frozen.");
+        alert("Google Sheet connected! Shifted headers to Row 1 and frozen all tabs.");
       }
     });
     client.requestAccessToken({ prompt: 'consent' });
@@ -292,11 +331,28 @@ export const FinanceProvider = ({ children }) => {
     setData(INITIAL_DATA);
   };
 
-  // Live Append Row to Google Sheet
+  // Live Append Row to Google Sheet (Ensures header exists first if sheet is empty)
   const appendRowToSheet = async (values, sheetTabName) => {
     const token = accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
     try {
+      const headers = SHEET_HEADER_CONFIG[sheetTabName];
+      const checkRes = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A1:A1`, {}, token);
+      if (!checkRes || !checkRes.values || checkRes.values.length === 0) {
+        // First row is empty, write header to Row 1 first
+        if (headers) {
+          await apiFetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A1:Z1?valueInputOption=USER_ENTERED`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ range: `${sheetTabName}!A1:Z1`, values: [headers] })
+            },
+            token
+          );
+        }
+      }
+
       await apiFetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A:Z:append?valueInputOption=USER_ENTERED`,
         {
