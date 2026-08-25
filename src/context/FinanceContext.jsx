@@ -132,22 +132,28 @@ export const FinanceProvider = ({ children }) => {
         }
       }
 
-      // 2. Unconditionally update Header Row 1 for ALL tabs
-      for (const tabTitle of requiredTabs) {
+      // 2. Atomic Single values:batchUpdate POST Request for ALL 11 Sheet Headers
+      const headerBatchData = requiredTabs.map(tabTitle => {
         const headers = SHEET_HEADER_CONFIG[tabTitle];
-        if (headers) {
-          await apiFetch(
-            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:Z1?valueInputOption=USER_ENTERED`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ range: `${tabTitle}!A1:Z1`, values: [headers] })
-            },
-            token
-          );
-          console.log(`Updated Header Row 1 in Google Sheet tab ${tabTitle}:`, headers);
-        }
-      }
+        return {
+          range: `${tabTitle}!A1:${String.fromCharCode(64 + headers.length)}1`,
+          values: [headers]
+        };
+      });
+
+      await apiFetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            valueInputOption: 'USER_ENTERED',
+            data: headerBatchData
+          })
+        },
+        token
+      );
+      console.log("Atomically updated all 11 sheet headers in Google Sheets!");
     } catch (err) {
       console.warn("Auto create tabs & update headers warning:", err);
     }
