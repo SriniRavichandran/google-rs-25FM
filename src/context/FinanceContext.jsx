@@ -74,7 +74,10 @@ export const FinanceProvider = ({ children }) => {
   // Ensure all 11 required module sheet tabs exist in Google Sheets and update headers + freeze Row 1
   const autoCreateModuleTabs = async (tokenOverride = null) => {
     const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
-    if (!token) return;
+    if (!token) {
+      console.warn("Cannot update sheet headers: Google Sign In is required.");
+      return;
+    }
 
     try {
       const meta = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {}, token);
@@ -268,7 +271,8 @@ export const FinanceProvider = ({ children }) => {
         localStorage.setItem("g_access_token", r.access_token);
         localStorage.setItem("g_token_expires", expiresAt.toString());
 
-        loadAllSheetsFromGoogle(r.access_token);
+        await loadAllSheetsFromGoogle(r.access_token);
+        alert("Google Sheet connected! All 11 tab headers updated and frozen.");
       }
     });
     client.requestAccessToken({ prompt: 'consent' });

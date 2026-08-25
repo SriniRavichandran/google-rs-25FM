@@ -6,15 +6,27 @@ import {
   Select,
   MenuItem,
   Button,
-  Box
+  Box,
+  Tooltip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import LockIcon from '@mui/icons-material/Lock';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SyncIcon from '@mui/icons-material/Sync';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const TopHeader = () => {
-  const { currentView, theme, setTheme, isAuthenticated, handleGoogleLogin, handleGoogleLogout, setActiveModal } = useFinance();
+  const {
+    currentView,
+    theme,
+    setTheme,
+    isAuthenticated,
+    handleGoogleLogin,
+    handleGoogleLogout,
+    setActiveModal,
+    refreshData,
+    isLoading
+  } = useFinance();
 
   const titleMap = {
     'dashboard': 'Dashboard Overview',
@@ -48,6 +60,22 @@ const TopHeader = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {/* Manual Google Sheet Sync Button */}
+          {isAuthenticated && (
+            <Tooltip title="Force Sync All Sheet Tabs & Headers">
+              <Button
+                variant="outlined"
+                color="info"
+                size="small"
+                startIcon={<SyncIcon className={isLoading ? 'spin' : ''} />}
+                onClick={() => refreshData()}
+                sx={{ borderRadius: 3 }}
+              >
+                Sync Sheet Headers
+              </Button>
+            </Tooltip>
+          )}
+
           {/* Theme Selector */}
           <Select
             size="small"
