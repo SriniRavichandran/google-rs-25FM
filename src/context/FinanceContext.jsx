@@ -15,6 +15,21 @@ const INITIAL_DATA = {
   reviews: []
 };
 
+// Standardized Column Headers for every sheet tab in Google Sheets
+const SHEET_HEADER_CONFIG = {
+  'Sheet1': ['ID', 'Date', 'Type', 'Category', 'Amount', 'Payment Method', 'Account', 'Description'],
+  'Credit': ['ID', 'Card Name', 'Bank Name', 'Network', 'Total Limit', 'Outstanding Dues', 'Due Date'],
+  'Debit': ['ID', 'Account Name', 'Bank Name', 'Type', 'Balance', 'Account Number'],
+  'Cash': ['ID', 'Date', 'Type', 'Category', 'Amount', 'Payment Method', 'Account', 'Description'],
+  'Trade': ['ID', 'Asset Name', 'Asset Type', 'Action', 'Quantity', 'Buy Price', 'Current Price'],
+  'Given_Loan': ['ID', 'Borrower Name', 'Amount Given', 'Interest Rate %', 'Date Given', 'Due Date', 'Amount Repaid', 'Outstanding Owed'],
+  'Taken_Loan': ['ID', 'Lender Name', 'Amount Borrowed', 'Interest Rate %', 'Date Taken', 'Due Date', 'Amount Repaid', 'Outstanding Balance'],
+  'Budget_vs_Actual': ['ID', 'Category', 'Target Budget Amount'],
+  'Bills_Subscriptions': ['ID', 'Bill Name', 'Category', 'Amount', 'Due Day', 'Status'],
+  'Goals': ['ID', 'Goal Title', 'Target Amount', 'Saved Amount', 'Target Date'],
+  'Reviews': ['ID', 'Date', 'Review Type', 'Grade', 'Notes']
+};
+
 export const FinanceProvider = ({ children }) => {
   const [data, setData] = useState(INITIAL_DATA);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +71,7 @@ export const FinanceProvider = ({ children }) => {
     return r.json();
   };
 
-  // Ensure all 11 required module sheet tabs exist in Google Sheets
+  // Ensure all 11 required module sheet tabs exist in Google Sheets with proper column headers in Row 1
   const autoCreateModuleTabs = async (tokenOverride = null) => {
     const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
@@ -66,9 +81,7 @@ export const FinanceProvider = ({ children }) => {
       if (!meta || !meta.sheets) return;
 
       const existingTitles = meta.sheets.map(s => s.properties.title);
-      const requiredTabs = [
-        'Sheet1', 'Credit', 'Debit', 'Cash', 'Trade', 'Given_Loan', 'Taken_Loan', 'Bills_Subscriptions', 'Budget_vs_Actual', 'Goals', 'Reviews'
-      ];
+      const requiredTabs = Object.keys(SHEET_HEADER_CONFIG);
 
       const missing = requiredTabs.filter(t => !existingTitles.includes(t));
       if (missing.length > 0) {
@@ -82,8 +95,28 @@ export const FinanceProvider = ({ children }) => {
         }, token);
         console.log("Auto-created missing sheet tabs:", missing);
       }
+
+      // Initialize Column Headers (Row 1) for all tabs
+      for (const tabTitle of requiredTabs) {
+        const headers = SHEET_HEADER_CONFIG[tabTitle];
+        if (headers) {
+          const checkRes = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:Z1`, {}, token);
+          if (!checkRes || !checkRes.values || checkRes.values.length === 0) {
+            await apiFetch(
+              `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:Z1?valueInputOption=USER_ENTERED`,
+              {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ range: `${tabTitle}!A1:Z1`, values: [headers] })
+              },
+              token
+            );
+            console.log(`Initialized column headers in Google Sheet tab ${tabTitle}:`, headers);
+          }
+        }
+      }
     } catch (err) {
-      console.warn("Auto create tabs warning:", err);
+      console.warn("Auto create tabs & headers warning:", err);
     }
   };
 
@@ -244,7 +277,7 @@ export const FinanceProvider = ({ children }) => {
     const token = accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
     try {
-      const range = `${sheetTabName}!A${rowIndex}:H${rowIndex}`;
+      const range = `${sheetTabName}!A${rowIndex}:Z${rowIndex}`;
       await apiFetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
         {
@@ -405,7 +438,6 @@ export const FinanceProvider = ({ children }) => {
     appendRowToSheet([newLoan.id, newLoan.lenderName, newLoan.amountTaken, newLoan.interestRate, newLoan.dateTaken, newLoan.dueDate, newLoan.amountRepaid, newLoan.outstandingBalance], 'Taken_Loan');
   };
 
-  // 7. Budget CRUD
   const addBudget = (budget) => {
     const newBudget = { ...budget, id: 'budget-' + Date.now(), sheetRowIndex: data.budgets.length + 2 };
     setData(prev => ({ ...prev, budgets: [...prev.budgets, newBudget] }));
@@ -432,7 +464,6 @@ export const FinanceProvider = ({ children }) => {
     setData(prev => ({ ...prev, budgets: prev.budgets.filter(b => b.id !== id) }));
   };
 
-  // 8. Bills CRUD
   const addBill = (bill) => {
     const newBill = { ...bill, id: 'bill-' + Date.now(), sheetRowIndex: data.bills.length + 2 };
     setData(prev => ({ ...prev, bills: [...prev.bills, newBill] }));
@@ -459,7 +490,6 @@ export const FinanceProvider = ({ children }) => {
     setData(prev => ({ ...prev, bills: prev.bills.filter(b => b.id !== id) }));
   };
 
-  // 9. Goals CRUD
   const addGoal = (goal) => {
     const newGoal = { ...goal, id: 'goal-' + Date.now(), sheetRowIndex: data.goals.length + 2 };
     setData(prev => ({ ...prev, goals: [...prev.goals, newGoal] }));
@@ -486,7 +516,6 @@ export const FinanceProvider = ({ children }) => {
     setData(prev => ({ ...prev, goals: prev.goals.filter(g => g.id !== id) }));
   };
 
-  // 10. Reviews CRUD
   const addReview = (review) => {
     const newReview = { ...review, id: 'review-' + Date.now(), sheetRowIndex: data.reviews.length + 2 };
     setData(prev => ({ ...prev, reviews: [newReview, ...prev.reviews] }));
