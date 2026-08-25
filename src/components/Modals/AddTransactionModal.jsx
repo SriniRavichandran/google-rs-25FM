@@ -1,4 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
+  IconButton
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useFinance } from '../../context/FinanceContext.jsx';
 
 const AddTransactionModal = () => {
@@ -28,82 +43,132 @@ const AddTransactionModal = () => {
     }
   }, [editingTx]);
 
-  if (activeModal !== 'add-transaction') return null;
+  const handleClose = () => {
+    setActiveModal(null);
+    setEditingTx(null);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingTx) {
       editTransaction(editingTx.id, formData);
-      setEditingTx(null);
     } else {
       addTransaction(formData);
     }
-    setActiveModal(null);
+    handleClose();
   };
 
   return (
-    <div className="modal-overlay open">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3 className="modal-title">{editingTx ? '✏️ Edit Row / Amount' : '➕ Add Row / Amount to Google Sheet'}</h3>
-          <button className="modal-close" onClick={() => { setActiveModal(null); setEditingTx(null); }}>&times;</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="form-group">
-              <label className="form-label">Transaction Type</label>
-              <select className="form-select" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} required>
-                <option value="expense">Expense (-)</option>
-                <option value="income">Income (+)</option>
-                <option value="investment">Investment Transfer</option>
-              </select>
-            </div>
+    <Dialog open={activeModal === 'add-transaction'} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 800 }}>
+        {editingTx ? '✏️ Edit Row / Amount' : '➕ Add Row / Amount to Google Sheet'}
+        <IconButton onClick={handleClose} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <form onSubmit={handleSubmit}>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Transaction Type</InputLabel>
+                <Select
+                  value={formData.type}
+                  label="Transaction Type"
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  required
+                >
+                  <MenuItem value="expense">Expense (-)</MenuItem>
+                  <MenuItem value="income">Income (+)</MenuItem>
+                  <MenuItem value="investment">Investment Transfer</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Amount (₹)</label>
-                <input type="number" step="0.01" className="form-input" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })} placeholder="e.g. 1500" required />
-              </div>
-              <div className="form-group">
-                <label class="form-label">Date</label>
-                <input type="date" class="form-input" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
-              </div>
-            </div>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Amount (₹)"
+                type="number"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                required
+              />
+            </Grid>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Category</label>
-                <input type="text" className="form-input" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g. Food, Salary, Rent" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Payment Method</label>
-                <select className="form-select" value={formData.paymentMethod} onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })} required>
-                  <option value="Credit Card">Credit Card</option>
-                  <option value="Debit Card">Debit Card</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Cash">Cash</option>
-                </select>
-              </div>
-            </div>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+                required
+              />
+            </Grid>
 
-            <div className="form-group">
-              <label className="form-label">Account / Card Used</label>
-              <input type="text" className="form-input" value={formData.account} onChange={(e) => setFormData({ ...formData, account: e.target.value })} placeholder="e.g. HDFC Regalia Gold" required />
-            </div>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                required
+              />
+            </Grid>
 
-            <div className="form-group">
-              <label className="form-label">Description / Note</label>
-              <input type="text" className="form-input" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="e.g. Dinner with friends" />
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={() => { setActiveModal(null); setEditingTx(null); }}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save to Sheet & App</button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Payment Method</InputLabel>
+                <Select
+                  value={formData.paymentMethod}
+                  label="Payment Method"
+                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                  required
+                >
+                  <MenuItem value="Credit Card">Credit Card</MenuItem>
+                  <MenuItem value="Debit Card">Debit Card</MenuItem>
+                  <MenuItem value="UPI">UPI</MenuItem>
+                  <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                  <MenuItem value="Cash">Cash</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Account / Card Used"
+                value={formData.account}
+                onChange={(e) => setFormData({ ...formData, account: e.target.value })}
+                placeholder="e.g. HDFC Regalia Gold"
+                required
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Description / Note"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="e.g. Dinner with family"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleClose} color="inherit">Cancel</Button>
+          <Button type="submit" variant="contained" color="primary">Save to Sheet & App</Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
 };
 

@@ -1,4 +1,25 @@
 import React from 'react';
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Table,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableRow,
+  TableContainer,
+  Paper,
+  Chip,
+  Button,
+  IconButton,
+  Tooltip
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const DashboardView = () => {
@@ -20,124 +41,189 @@ const DashboardView = () => {
   };
 
   return (
-    <div className="page-view active">
+    <Box sx={{ p: 3 }}>
       {/* Hero Banner */}
-      <div className="hero-emblem-container shimmer-effect">
-        <img src="RS-25F Mind.png" alt="RS-25F MIND Logo" className="hero-emblem-img" />
-        <div>
-          <div className="hero-emblem-title">RS-25F MIND Personal Finance Tracker</div>
-          <div className="hero-emblem-subtitle">SMART FINANCE. BETTER LIFE. | Track. Plan. Save. Invest. Grow.</div>
-        </div>
-      </div>
+      <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.1))', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2.5, py: 2.5 }}>
+          <img src="RS-25F Mind.png" alt="RS-25F MIND Logo" style={{ width: 64, height: 64, objectFit: 'contain' }} />
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              RS-25F MIND Personal Finance Tracker
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+              SMART FINANCE. BETTER LIFE. | Track. Plan. Save. Invest. Grow.
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* Metrics Grid */}
-      <div className="grid-4">
-        <div className="glass-card glass-card-glow-green">
-          <div className="stat-widget">
-            <div className="stat-label">Total Net Worth</div>
-            <div className="stat-value" style={{ color: 'var(--bull-green)' }}>{formatCurrency(netWorth)}</div>
-            <div className="stat-change bull"><span>Liquid + Investments + Loans - Debt</span></div>
-          </div>
-        </div>
+      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Card>
+            <CardContent>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+                Total Net Worth
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5 }}>
+                {formatCurrency(netWorth)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>
+                Liquid + Investments + Loans - Debt
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
-        <div className="glass-card glass-card-glow-gold">
-          <div className="stat-widget">
-            <div className="stat-label">Savings Rate ({selectedPeriod.toUpperCase()})</div>
-            <div className="stat-value" style={{ color: 'var(--amber-gold)' }}>{savingsRate.toFixed(1)}%</div>
-            <div className="stat-change bull"><span>Target: 30%+</span></div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Card>
+            <CardContent>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+                Savings Rate ({selectedPeriod.toUpperCase()})
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#f59e0b', my: 0.5 }}>
+                {savingsRate.toFixed(1)}%
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#f59e0b', fontWeight: 600 }}>
+                Target: 30%+
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
-        <div className="glass-card glass-card-glow-blue">
-          <div className="stat-widget">
-            <div className="stat-label">Liquid Cash Balance (Debit)</div>
-            <div className="stat-value" style={{ color: 'var(--sapphire-blue)' }}>{formatCurrency(totalBankBalance)}</div>
-            <div className="stat-change bull"><span>Available Reserve</span></div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Card>
+            <CardContent>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+                Liquid Cash Balance (Debit)
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', my: 0.5 }}>
+                {formatCurrency(totalBankBalance)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 600 }}>
+                Available Reserve
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
-        <div className="glass-card glass-card-glow-green">
-          <div className="stat-widget">
-            <div className="stat-label">Money Owed to Me (Given Loan)</div>
-            <div className="stat-value" style={{ color: 'var(--bull-green)' }}>{formatCurrency(totalLoansGiven)}</div>
-            <div className="stat-change bull"><span>Lent Assets</span></div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Card>
+            <CardContent>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+                Money Owed (Given Loan)
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5 }}>
+                {formatCurrency(totalLoansGiven)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>
+                Lent Assets
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
-        <div className="glass-card glass-card-glow-red">
-          <div className="stat-widget">
-            <div className="stat-label">Borrowed Debt (Taken Loan)</div>
-            <div className="stat-value" style={{ color: 'var(--bear-red)' }}>{formatCurrency(totalLoansTaken)}</div>
-            <div className="stat-change bear"><span>Payoff Dues</span></div>
-          </div>
-        </div>
-      </div>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Card>
+            <CardContent>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+                Borrowed Debt (Taken Loan)
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#ef4444', my: 0.5 }}>
+                {formatCurrency(totalLoansTaken)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600 }}>
+                Payoff Dues
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-      {/* Action Buttons Bar */}
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-        <button className="btn btn-primary" onClick={() => setActiveModal('add-transaction')}>+ Add Row / Amount</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('add-credit-card')}>+ Add Credit Card</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('add-bank-account')}>+ Add Bank Account</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('add-cashflow')}>+ Add Transaction</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('add-trade')}>+ Log Trade / Asset</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('add-loan-given')}>+ Add Loan Given</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('add-loan-taken')}>+ Add Loan Taken</button>
-      </div>
+      {/* Action Buttons */}
+      <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 3 }}>
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setActiveModal('add-transaction')}>
+          + Add Row / Amount
+        </Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-credit-card')}>+ Add Credit Card</Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-bank-account')}>+ Add Bank Account</Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-cashflow')}>+ Add Transaction</Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-trade')}>+ Log Trade / Asset</Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-loan-given')}>+ Add Loan Given</Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-loan-taken')}>+ Add Loan Taken</Button>
+      </Box>
 
-      {/* Transaction Log */}
-      <div>
-        <div className="section-header">
-          <div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>🧾 Live Transaction Log ({selectedPeriod.toUpperCase()})</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Direct live sync to Google Sheet1</p>
-          </div>
-        </div>
+      {/* Table */}
+      <Card>
+        <CardContent sx={{ p: 0 }}>
+          <Box sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                🧾 Live Transaction Log ({selectedPeriod.toUpperCase()})
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                Direct live sync & edit to Google Sheet1 / Cash
+              </Typography>
+            </Box>
+          </Box>
 
-        <div className="glass-card">
-          <div className="table-container">
-            <table className="glass-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Category</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Payment Method</th>
-                  <th>Account</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Payment Method</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Account</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {filteredTx.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                       No records found for {selectedPeriod}. Click <strong>"+ Add Row / Amount"</strong> to add an entry!
-                    </td>
-                  </tr>
-                ) : filteredTx.map(t => (
-                  <tr key={t.id}>
-                    <td>{t.date}</td>
-                    <td><strong>{t.category}</strong></td>
-                    <td><span className={`badge badge-${t.type}`}>{t.type.toUpperCase()}</span></td>
-                    <td style={{ fontWeight: 700, color: t.type === 'income' ? 'var(--bull-green)' : 'var(--bear-red)' }}>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTx.map((t) => (
+                  <TableRow key={t.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                    <TableCell>{t.date}</TableCell>
+                    <TableCell><strong>{t.category}</strong></TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t.type.toUpperCase()}
+                        size="small"
+                        color={t.type === 'income' ? 'success' : t.type === 'expense' ? 'error' : 'info'}
+                        sx={{ fontWeight: 700, borderRadius: 2 }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444' }}>
                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                    </td>
-                    <td>{t.paymentMethod}</td>
-                    <td>{t.account}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.35rem' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={() => { setEditingTx(t); setActiveModal('add-transaction'); }}>✏️ Edit</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => deleteTransaction(t.id)}>🗑️ Delete</button>
-                      </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>{t.paymentMethod}</TableCell>
+                    <TableCell>{t.account}</TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Edit Row">
+                        <IconButton size="small" color="primary" onClick={() => { setEditingTx(t); setActiveModal('add-transaction'); }}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Row">
+                        <IconButton size="small" color="error" onClick={() => deleteTransaction(t.id)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

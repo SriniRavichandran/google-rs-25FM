@@ -1,92 +1,152 @@
-import React, { useState } from 'react';
+import React from 'react';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Box,
+  Divider,
+  Button
+} from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
+import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 import { useFinance } from '../context/FinanceContext.jsx';
+
+const drawerWidth = 280;
 
 const Sidebar = () => {
   const { currentView, setCurrentView, isAuthenticated, handleGoogleLogin } = useFinance();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const coreNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'credit-cards', label: 'Credit Cards (Credit)', icon: '💳' },
-    { id: 'bank-accounts', label: 'Debit Cards & Bank (Debit)', icon: '💳' },
-    { id: 'cash-flow', label: 'Cash Flow (Cash)', icon: '💰' },
-    { id: 'investments', label: 'Trade & Investments (Trade)', icon: '📈' },
-    { id: 'loans-given', label: 'Loans Given (Given_Loan)', icon: '🤝' },
-    { id: 'loans-taken', label: 'Loans Taken (Taken_Loan)', icon: '💸' },
+    { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon color="primary" /> },
+    { id: 'credit-cards', label: 'Credit Cards (Credit)', icon: <CreditCardIcon style={{ color: '#ef4444' }} /> },
+    { id: 'bank-accounts', label: 'Debit Cards & Bank (Debit)', icon: <AccountBalanceIcon style={{ color: '#38bdf8' }} /> },
+    { id: 'cash-flow', label: 'Cash Flow (Cash)', icon: <AttachMoneyIcon style={{ color: '#10b981' }} /> },
+    { id: 'investments', label: 'Trade & Investments (Trade)', icon: <TrendingUpIcon style={{ color: '#f59e0b' }} /> },
+    { id: 'loans-given', label: 'Loans Given (Given_Loan)', icon: <HandshakeIcon style={{ color: '#10b981' }} /> },
+    { id: 'loans-taken', label: 'Loans Taken (Taken_Loan)', icon: <MoneyOffIcon style={{ color: '#ef4444' }} /> },
   ];
 
   const analyticsNavItems = [
-    { id: 'budget', label: 'Budget vs Actual', icon: '🎯' },
-    { id: 'bills', label: 'Bills & Subscriptions', icon: '🔄' },
-    { id: 'goals', label: 'Financial Goals', icon: '🏆' },
-    { id: 'reviews', label: 'Daily/Weekly Review', icon: '📅' },
-    { id: 'net-worth', label: 'Net-Worth Tracker', icon: '📈' },
+    { id: 'budget', label: 'Budget vs Actual', icon: <TrackChangesIcon style={{ color: '#a855f7' }} /> },
+    { id: 'bills', label: 'Bills & Subscriptions', icon: <AutorenewIcon style={{ color: '#38bdf8' }} /> },
+    { id: 'goals', label: 'Financial Goals', icon: <EmojiEventsIcon style={{ color: '#fbbf24' }} /> },
+    { id: 'reviews', label: 'Daily/Weekly Review', icon: <EventNoteIcon style={{ color: '#84cc16' }} /> },
+    { id: 'net-worth', label: 'Net-Worth Tracker', icon: <ShowChartIcon style={{ color: '#10b981' }} /> },
   ];
 
   return (
-    <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`} id="sidebar">
-      <div className="sidebar-header">
-        <img src="RS-25F Mind.png" alt="RS-25F MIND Emblem" className="sidebar-logo" />
-        <div>
-          <div className="brand-title">RS-25F MIND</div>
-          <div className="brand-tagline">SMART FINANCE</div>
-        </div>
-      </div>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          background: 'rgba(11, 7, 9, 0.92)',
+          backdropFilter: 'blur(20px)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+        },
+      }}
+    >
+      {/* Sidebar Header Brand Logo */}
+      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <img src="RS-25F Mind.png" alt="RS-25F MIND Logo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            RS-25F MIND
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 1 }}>
+            SMART FINANCE
+          </Typography>
+        </Box>
+      </Box>
 
-      <div className="sidebar-nav-container">
-        <div className="nav-section-title">Core Modules</div>
-        <ul className="nav-menu">
-          {coreNavItems.map(item => (
-            <li key={item.id}>
-              <a
-                href="#"
-                className={`nav-item ${currentView === item.id ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentView(item.id);
-                  setMobileOpen(false);
+      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
+
+      <Box sx={{ overflowY: 'auto', flex: 1, p: 1.5 }}>
+        <Typography variant="caption" sx={{ px: 1.5, py: 1, display: 'block', color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+          Core Modules
+        </Typography>
+        <List disablePadding>
+          {coreNavItems.map((item) => (
+            <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={currentView === item.id}
+                onClick={() => setCurrentView(item.id)}
+                sx={{
+                  borderRadius: 3,
+                  '&.Mui-selected': {
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.15))',
+                    borderLeft: '4px solid #10b981'
+                  }
                 }}
               >
-                <span className="nav-icon">{item.icon}</span> {item.label}
-              </a>
-            </li>
+                <ListItemIcon sx={{ minWidth: 38 }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: currentView === item.id ? 700 : 500 }} />
+              </ListItemButton>
+            </ListItem>
           ))}
-        </ul>
+        </List>
 
-        <div className="nav-section-title">Analytics & Tools</div>
-        <ul className="nav-menu">
-          {analyticsNavItems.map(item => (
-            <li key={item.id}>
-              <a
-                href="#"
-                className={`nav-item ${currentView === item.id ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentView(item.id);
-                  setMobileOpen(false);
+        <Divider sx={{ my: 1.5, borderColor: 'rgba(255, 255, 255, 0.08)' }} />
+
+        <Typography variant="caption" sx={{ px: 1.5, py: 1, display: 'block', color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+          Analytics & Tools
+        </Typography>
+        <List disablePadding>
+          {analyticsNavItems.map((item) => (
+            <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                selected={currentView === item.id}
+                onClick={() => setCurrentView(item.id)}
+                sx={{
+                  borderRadius: 3,
+                  '&.Mui-selected': {
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.15))',
+                    borderLeft: '4px solid #10b981'
+                  }
                 }}
               >
-                <span className="nav-icon">{item.icon}</span> {item.label}
-              </a>
-            </li>
+                <ListItemIcon sx={{ minWidth: 38 }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: currentView === item.id ? 700 : 500 }} />
+              </ListItemButton>
+            </ListItem>
           ))}
-        </ul>
-      </div>
+        </List>
+      </Box>
 
-      <div className="sidebar-footer">
-        <div className="sheet-status-card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div className={`sync-dot ${isAuthenticated ? 'online' : 'offline'}`}></div>
-            <span className="status-text">{isAuthenticated ? 'Connected' : 'Sign In Required'}</span>
-          </div>
-          {!isAuthenticated && (
-            <button className="btn btn-google" style={{ padding: '0.35rem 0.6rem', fontSize: '0.72rem' }} onClick={handleGoogleLogin}>
-              Connect Sheet
-            </button>
-          )}
-        </div>
-      </div>
-    </aside>
+      {/* Footer Sheet Connection Status */}
+      <Box sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0,0,0,0.2)' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', background: isAuthenticated ? '#10b981' : '#ef4444', boxShadow: isAuthenticated ? '0 0 8px #10b981' : 'none' }} />
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+              {isAuthenticated ? 'Connected' : 'Sign In Required'}
+            </Typography>
+          </Box>
+        </Box>
+        {!isAuthenticated && (
+          <Button variant="outlined" color="primary" fullWidth size="small" onClick={handleGoogleLogin} sx={{ mt: 0.5, borderRadius: 2 }}>
+            Connect Sheet
+          </Button>
+        )}
+      </Box>
+    </Drawer>
   );
 };
 

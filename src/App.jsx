@@ -3,11 +3,11 @@ import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { FinanceProvider, useFinance } from './context/FinanceContext.jsx';
 import { getMuiTheme } from './theme.js';
 import ThreeBackground from './components/ThreeBackground.jsx';
-import MuiSidebar from './components/MuiSidebar.jsx';
-import MuiTopHeader from './components/MuiTopHeader.jsx';
+import Sidebar from './components/Sidebar.jsx';
+import TopHeader from './components/TopHeader.jsx';
 import PeriodTrackerBar from './components/PeriodTrackerBar.jsx';
-import MuiDashboardView from './views/MuiDashboardView.jsx';
-import MuiAddTransactionModal from './components/Modals/MuiAddTransactionModal.jsx';
+import DashboardView from './views/DashboardView.jsx';
+import AddTransactionModal from './components/Modals/AddTransactionModal.jsx';
 
 const MainAppContent = () => {
   const { theme } = useFinance();
@@ -17,13 +17,13 @@ const MainAppContent = () => {
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-        <MuiSidebar />
+        <Sidebar />
         <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', overflowX: 'hidden' }}>
-          <MuiTopHeader />
+          <TopHeader />
           <PeriodTrackerBar />
-          <MuiDashboardView />
+          <DashboardView />
         </Box>
-        <MuiAddTransactionModal />
+        <AddTransactionModal />
       </Box>
     </ThemeProvider>
   );

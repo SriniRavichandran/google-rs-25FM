@@ -1,4 +1,16 @@
 import React from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Select,
+  MenuItem,
+  Button,
+  Box
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import LockIcon from '@mui/icons-material/Lock';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const TopHeader = () => {
@@ -20,38 +32,85 @@ const TopHeader = () => {
   };
 
   return (
-    <header className="top-header">
-      <div className="header-title-container">
-        <h1 className="page-title">{titleMap[currentView] || 'RS-25F MIND'}</h1>
-      </div>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        background: 'rgba(11, 7, 9, 0.75)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        ml: { sm: '280px' }
+      }}
+    >
+      <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          {titleMap[currentView] || 'RS-25F MIND'}
+        </Typography>
 
-      <div className="header-actions">
-        <select value={theme} onChange={(e) => setTheme(e.target.value)} className="theme-picker" title="Choose Color Theme Preference">
-          <option value="relentless">🔥 RS-25 Crimson</option>
-          <option value="cyber">🎨 Cyber Cyan</option>
-          <option value="purple">💜 Purple Velvet</option>
-          <option value="emerald">🟢 Emerald Mint</option>
-          <option value="sunset">🌅 Sunset Amber</option>
-          <option value="ocean">🌊 Ocean Sapphire</option>
-          <option value="rose">🌸 Rose Gold</option>
-          <option value="lime">⚡ Neon Lime</option>
-          <option value="slate">🪙 Titanium Slate</option>
-        </select>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {/* Theme Selector */}
+          <Select
+            size="small"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            sx={{
+              borderRadius: 3,
+              fontSize: '0.85rem',
+              background: 'rgba(255,255,255,0.05)',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' }
+            }}
+          >
+            <MenuItem value="relentless">🔥 RS-25 Crimson</MenuItem>
+            <MenuItem value="cyber">🎨 Cyber Cyan</MenuItem>
+            <MenuItem value="purple">💜 Purple Velvet</MenuItem>
+            <MenuItem value="emerald">🟢 Emerald Mint</MenuItem>
+            <MenuItem value="sunset">🌅 Sunset Amber</MenuItem>
+            <MenuItem value="ocean">🌊 Ocean Sapphire</MenuItem>
+            <MenuItem value="rose">🌸 Rose Gold</MenuItem>
+            <MenuItem value="lime">⚡ Neon Lime</MenuItem>
+            <MenuItem value="slate">🪙 Titanium Slate</MenuItem>
+          </Select>
 
-        {!isAuthenticated ? (
-          <button className="btn btn-google" onClick={handleGoogleLogin}>
-            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/></svg>
-            Sign in with Google
-          </button>
-        ) : (
-          <button className="btn btn-danger btn-sm" onClick={handleGoogleLogout}>Sign Out</button>
-        )}
+          {/* Google Auth Buttons */}
+          {!isAuthenticated ? (
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<LockIcon />}
+              onClick={handleGoogleLogin}
+              sx={{ borderRadius: 3 }}
+            >
+              Sign in with Google
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<LogoutIcon />}
+              onClick={handleGoogleLogout}
+              sx={{ borderRadius: 3 }}
+            >
+              Sign Out
+            </Button>
+          )}
 
-        <button className="btn btn-primary" onClick={() => setActiveModal('add-transaction')}>
-          <span>+ Add Row / Amount</span>
-        </button>
-      </div>
-    </header>
+          {/* Add Row Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setActiveModal('add-transaction')}
+            sx={{
+              borderRadius: 3,
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
+            }}
+          >
+            Add Row / Amount
+          </Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 
