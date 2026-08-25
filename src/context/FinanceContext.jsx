@@ -71,7 +71,7 @@ export const FinanceProvider = ({ children }) => {
     return r.json();
   };
 
-  // Ensure all 11 required module sheet tabs exist in Google Sheets with frozen Row 1 header
+  // Ensure all 11 required module sheet tabs exist in Google Sheets and update headers + freeze Row 1
   const autoCreateModuleTabs = async (tokenOverride = null) => {
     const token = tokenOverride || accessToken || localStorage.getItem('g_access_token');
     if (!token) return;
@@ -98,14 +98,13 @@ export const FinanceProvider = ({ children }) => {
         console.log("Auto-created missing sheet tabs:", missing);
       }
 
-      // Re-fetch sheet metadata to obtain internal sheetIds for freezing Row 1
+      // Re-fetch sheet metadata to freeze Row 1 headers
       const updatedMeta = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {}, token);
       if (updatedMeta && updatedMeta.sheets) {
         const freezeRequests = [];
         updatedMeta.sheets.forEach(s => {
           const sProps = s.properties;
           if (requiredTabs.includes(sProps.title)) {
-            // Check if Row 1 is not frozen
             if (!sProps.gridProperties || sProps.gridProperties.frozenRowCount < 1) {
               freezeRequests.push({
                 updateSheetProperties: {
@@ -126,31 +125,28 @@ export const FinanceProvider = ({ children }) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ requests: freezeRequests })
           }, token);
-          console.log("Fixed & frozen Header Row 1 across Google Sheets tabs!");
+          console.log("Fixed & frozen Header Row 1 across all Google Sheets tabs!");
         }
       }
 
-      // 2. Write Column Headers to Row 1 for all tabs
+      // 2. Unconditionally update Header Row 1 for ALL tabs
       for (const tabTitle of requiredTabs) {
         const headers = SHEET_HEADER_CONFIG[tabTitle];
         if (headers) {
-          const checkRes = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:Z1`, {}, token);
-          if (!checkRes || !checkRes.values || checkRes.values.length === 0) {
-            await apiFetch(
-              `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:Z1?valueInputOption=USER_ENTERED`,
-              {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ range: `${tabTitle}!A1:Z1`, values: [headers] })
-              },
-              token
-            );
-            console.log(`Initialized fixed header row in Google Sheet tab ${tabTitle}:`, headers);
-          }
+          await apiFetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle)}!A1:Z1?valueInputOption=USER_ENTERED`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ range: `${tabTitle}!A1:Z1`, values: [headers] })
+            },
+            token
+          );
+          console.log(`Updated Header Row 1 in Google Sheet tab ${tabTitle}:`, headers);
         }
       }
     } catch (err) {
-      console.warn("Auto create tabs & freeze headers warning:", err);
+      console.warn("Auto create tabs & update headers warning:", err);
     }
   };
 
