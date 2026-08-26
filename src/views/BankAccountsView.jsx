@@ -5,15 +5,23 @@ import {
   TableBody, TableCell, TableRow, TableContainer, Paper
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const BankAccountsView = () => {
-  const { data, totalBankBalance, setActiveModal, deleteTransaction } = useFinance();
+  const {
+    data,
+    totalBankBalance,
+    setActiveModal,
+    deleteTransaction,
+    setEditingBankAccount
+  } = useFinance();
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -22,7 +30,7 @@ const BankAccountsView = () => {
           <Typography variant="h5" sx={{ fontWeight: 800 }}>🏦 Debit Cards & Bank Accounts</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>Track liquid cash, bank balances, savings, and debit card accounts</Typography>
         </Box>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setActiveModal('add-bank-account')}>
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => { setEditingBankAccount(null); setActiveModal('add-bank-account'); }}>
           + Add Bank Account
         </Button>
       </Box>
@@ -83,6 +91,18 @@ const BankAccountsView = () => {
                     <TableCell>**** {a.accountNumber}</TableCell>
                     <TableCell sx={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(a.balance)}</TableCell>
                     <TableCell align="right">
+                      <Tooltip title="Edit Account">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => {
+                            setEditingBankAccount(a);
+                            setActiveModal('add-bank-account');
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Delete Account">
                         <IconButton size="small" color="error" onClick={() => setDeleteTarget(a)}>
                           <DeleteIcon fontSize="small" />

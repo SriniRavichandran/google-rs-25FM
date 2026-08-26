@@ -11,10 +11,19 @@ import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const CreditCardsView = () => {
-  const { data, totalCreditLimit, totalCreditOutstanding, creditUtil, setActiveModal, deleteTransaction } = useFinance();
+  const {
+    data,
+    totalCreditLimit,
+    totalCreditOutstanding,
+    creditUtil,
+    setActiveModal,
+    deleteTransaction,
+    setEditingCreditCard
+  } = useFinance();
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -23,7 +32,7 @@ const CreditCardsView = () => {
           <Typography variant="h5" sx={{ fontWeight: 800 }}>💳 Credit Card Usage & Limit Health</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>Track total limits, outstanding dues, utilization %, and billing cycles</Typography>
         </Box>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setActiveModal('add-credit-card')}>
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => { setEditingCreditCard(null); setActiveModal('add-credit-card'); }}>
           + Add Credit Card
         </Button>
       </Box>
@@ -99,6 +108,18 @@ const CreditCardsView = () => {
                       </TableCell>
                       <TableCell>Day {c.dueDate}</TableCell>
                       <TableCell align="right">
+                        <Tooltip title="Edit Card">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => {
+                              setEditingCreditCard(c);
+                              setActiveModal('add-credit-card');
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Delete Card">
                           <IconButton size="small" color="error" onClick={() => setDeleteTarget(c)}>
                             <DeleteIcon fontSize="small" />

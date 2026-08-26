@@ -1,35 +1,45 @@
 import React, { useState } from 'react';
 import {
-  Box, Grid, Card, CardContent, Typography, Table, TableHead,
-  TableBody, TableCell, TableRow, TableContainer, Paper,
-  Chip, Button, IconButton, Tooltip
+  Box, Grid, Card, CardContent, Typography, Chip,
+  Button, IconButton, Tooltip, Table, TableHead,
+  TableBody, TableCell, TableRow, TableContainer, Paper
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const InvestmentsView = () => {
-  const { data, totalInvested, totalPortfolioValue, setActiveModal, deleteTransaction } = useFinance();
+  const {
+    data,
+    totalInvested,
+    totalPortfolioValue,
+    setActiveModal,
+    deleteTransaction,
+    setEditingTrade
+  } = useFinance();
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+  const formatCurrency = (val) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
 
   const totalPnL = totalPortfolioValue - totalInvested;
-  const roi = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
+  const overallRoi = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>📈 Trade & Investment Portfolio</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>Track buy/sell positions, invested capital, market value, and unrealized P&L</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 800 }}>📈 Investments, Stocks & Assets</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>Track equity portfolios, mutual funds, crypto, buy prices, and unrealized P&L</Typography>
         </Box>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setActiveModal('add-trade')}>
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => { setEditingTrade(null); setActiveModal('add-trade'); }}>
           + Log Trade / Asset
         </Button>
       </Box>
 
+      {/* Metrics */}
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card><CardContent>
@@ -47,24 +57,26 @@ const InvestmentsView = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card><CardContent>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total P&L</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Unrealized P&L</Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, color: totalPnL >= 0 ? '#10b981' : '#ef4444', my: 0.5 }}>
               {totalPnL >= 0 ? '+' : ''}{formatCurrency(totalPnL)}
             </Typography>
-            <Typography variant="caption" sx={{ color: totalPnL >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>Returns</Typography>
+            <Typography variant="caption" sx={{ color: totalPnL >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+              {overallRoi.toFixed(2)}% Overall Returns
+            </Typography>
           </CardContent></Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card><CardContent>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Portfolio ROI %</Typography>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: roi >= 0 ? '#10b981' : '#ef4444', my: 0.5 }}>
-              {roi >= 0 ? '+' : ''}{roi.toFixed(2)}%
-            </Typography>
-            <Typography variant="caption" sx={{ color: roi >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>Overall Gain</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Tracked Positions</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: '#a855f7', my: 0.5 }}>{data.investments.length}</Typography>
+            <Typography variant="caption" sx={{ color: '#a855f7', fontWeight: 600 }}>Active Assets</Typography>
           </CardContent></Card>
         </Grid>
       </Grid>
 
+      {/* Portfolio Table */}
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>📈 Portfolio Holdings & Asset Performance</Typography>
       <Card>
         <CardContent sx={{ p: 0 }}>
           <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
@@ -76,7 +88,7 @@ const InvestmentsView = () => {
                   <TableCell sx={{ fontWeight: 700 }}>Qty</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Buy Price</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Current Price</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Invested</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Invested Amount</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Current Value</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>P&L</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
@@ -105,6 +117,18 @@ const InvestmentsView = () => {
                         {itemPnL >= 0 ? '+' : ''}{formatCurrency(itemPnL)} ({itemRoi.toFixed(1)}%)
                       </TableCell>
                       <TableCell align="right">
+                        <Tooltip title="Edit Trade">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => {
+                              setEditingTrade(inv);
+                              setActiveModal('add-trade');
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Delete Trade">
                           <IconButton size="small" color="error" onClick={() => setDeleteTarget(inv)}>
                             <DeleteIcon fontSize="small" />

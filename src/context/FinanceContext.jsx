@@ -51,6 +51,9 @@ export const FinanceProvider = ({ children }) => {
   const [editingReview, setEditingReview] = useState(null);
   const [editingLoanGiven, setEditingLoanGiven] = useState(null);
   const [editingLoanTaken, setEditingLoanTaken] = useState(null);
+  const [editingBankAccount, setEditingBankAccount] = useState(null);
+  const [editingCreditCard, setEditingCreditCard] = useState(null);
+  const [editingTrade, setEditingTrade] = useState(null);
 
   const sheetId = "1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik";
   const clientId = "223951688164-fpfp028pti606lavi5iel7rihgts878v.apps.googleusercontent.com";
@@ -552,21 +555,63 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const addCreditCard = (card) => {
-    const newCard = { ...card, id: 'card-' + Date.now() };
+    const newCard = { ...card, id: 'card-' + Date.now(), sheetRowIndex: data.creditCards.length + 2 };
     setData(prev => ({ ...prev, creditCards: [...prev.creditCards, newCard] }));
     appendRowToSheet([newCard.id, newCard.name, newCard.bank, newCard.network, newCard.limit, newCard.outstanding, newCard.dueDate], 'Credit');
   };
 
+  const editCreditCard = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      creditCards: prev.creditCards.map(c => {
+        if (c.id === id) {
+          const item = { ...c, ...updated };
+          updateRowInSheet('Credit', item.sheetRowIndex || 2, [item.id, item.name, item.bank, item.network, item.limit, item.outstanding, item.dueDate]);
+          return item;
+        }
+        return c;
+      })
+    }));
+  };
+
   const addBankAccount = (bank) => {
-    const newBank = { ...bank, id: 'bank-' + Date.now() };
+    const newBank = { ...bank, id: 'bank-' + Date.now(), sheetRowIndex: data.bankAccounts.length + 2 };
     setData(prev => ({ ...prev, bankAccounts: [...prev.bankAccounts, newBank] }));
     appendRowToSheet([newBank.id, newBank.name, newBank.bank, newBank.type, newBank.balance, newBank.accountNumber], 'Debit');
   };
 
+  const editBankAccount = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      bankAccounts: prev.bankAccounts.map(b => {
+        if (b.id === id) {
+          const item = { ...b, ...updated };
+          updateRowInSheet('Debit', item.sheetRowIndex || 2, [item.id, item.name, item.bank, item.type, item.balance, item.accountNumber]);
+          return item;
+        }
+        return b;
+      })
+    }));
+  };
+
   const addTrade = (trade) => {
-    const newTrade = { ...trade, id: 'inv-' + Date.now() };
+    const newTrade = { ...trade, id: 'inv-' + Date.now(), sheetRowIndex: data.investments.length + 2 };
     setData(prev => ({ ...prev, investments: [...prev.investments, newTrade] }));
     appendRowToSheet([newTrade.id, newTrade.name, newTrade.type, newTrade.action, newTrade.quantity, newTrade.buyPrice, newTrade.currentPrice], 'Trade');
+  };
+
+  const editTrade = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      investments: prev.investments.map(i => {
+        if (i.id === id) {
+          const item = { ...i, ...updated };
+          updateRowInSheet('Trade', item.sheetRowIndex || 2, [item.id, item.name, item.type, item.action, item.quantity, item.buyPrice, item.currentPrice]);
+          return item;
+        }
+        return i;
+      })
+    }));
   };
 
   const addLoanGiven = (loan) => {
@@ -733,6 +778,9 @@ export const FinanceProvider = ({ children }) => {
       editingReview, setEditingReview,
       editingLoanGiven, setEditingLoanGiven,
       editingLoanTaken, setEditingLoanTaken,
+      editingBankAccount, setEditingBankAccount,
+      editingCreditCard, setEditingCreditCard,
+      editingTrade, setEditingTrade,
       netWorth,
       savingsRate,
       totalBankBalance,
@@ -745,9 +793,9 @@ export const FinanceProvider = ({ children }) => {
       creditUtil,
       filteredTx,
       addTransaction, editTransaction, deleteTransaction,
-      addCreditCard,
-      addBankAccount,
-      addTrade,
+      addCreditCard, editCreditCard,
+      addBankAccount, editBankAccount,
+      addTrade, editTrade,
       addLoanGiven, editLoanGiven,
       addLoanTaken, editLoanTaken,
       addBudget, editBudget, deleteBudget,
