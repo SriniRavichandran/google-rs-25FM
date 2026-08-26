@@ -1,28 +1,106 @@
 import React from 'react';
+import { Box, Typography, Button, TextField, Stack } from '@mui/material';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import TuneIcon from '@mui/icons-material/Tune';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const PeriodTrackerBar = () => {
-  const { selectedPeriod, setSelectedPeriod, customStartDate, setCustomStartDate, customEndDate, setCustomEndDate } = useFinance();
+  const {
+    selectedPeriod,
+    setSelectedPeriod,
+    customStartDate,
+    setCustomStartDate,
+    customEndDate,
+    setCustomEndDate
+  } = useFinance();
+
+  const periods = [
+    { id: 'daily', label: 'Daily', icon: <CalendarTodayIcon sx={{ fontSize: 15 }} /> },
+    { id: 'weekly', label: 'Weekly', icon: <DateRangeIcon sx={{ fontSize: 15 }} /> },
+    { id: 'monthly', label: 'Monthly', icon: <CalendarTodayIcon sx={{ fontSize: 15 }} /> },
+    { id: 'yearly', label: 'Yearly', icon: <DateRangeIcon sx={{ fontSize: 15 }} /> },
+    { id: 'custom', label: 'Custom Range', icon: <TuneIcon sx={{ fontSize: 15 }} /> }
+  ];
 
   return (
-    <div className="period-tracker-bar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tracking Period:</span>
-        <button className={`period-pill ${selectedPeriod === 'daily' ? 'active' : ''}`} onClick={() => setSelectedPeriod('daily')}>📅 Daily</button>
-        <button className={`period-pill ${selectedPeriod === 'weekly' ? 'active' : ''}`} onClick={() => setSelectedPeriod('weekly')}>📆 Weekly</button>
-        <button className={`period-pill ${selectedPeriod === 'monthly' ? 'active' : ''}`} onClick={() => setSelectedPeriod('monthly')}>📅 Monthly</button>
-        <button className={`period-pill ${selectedPeriod === 'yearly' ? 'active' : ''}`} onClick={() => setSelectedPeriod('yearly')}>📆 Yearly</button>
-        <button className={`period-pill ${selectedPeriod === 'custom' ? 'active' : ''}`} onClick={() => setSelectedPeriod('custom')}>⚙️ Custom Range</button>
+    <Box
+      sx={{
+        py: 1,
+        px: 3,
+        background: 'rgba(11, 7, 9, 0.65)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        ml: { sm: '280px' },
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        flexWrap: 'wrap'
+      }}
+    >
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
+        Tracking Period:
+      </Typography>
 
-        {selectedPeriod === 'custom' && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
-            <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="form-input" style={{ padding: '0.25rem 0.5rem', fontSize: '0.78rem', width: '130px' }} />
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>to</span>
-            <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="form-input" style={{ padding: '0.25rem 0.5rem', fontSize: '0.78rem', width: '130px' }} />
-          </div>
-        )}
-      </div>
-    </div>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+        {periods.map((p) => {
+          const isActive = selectedPeriod === p.id;
+          return (
+            <Button
+              key={p.id}
+              size="small"
+              variant={isActive ? 'contained' : 'outlined'}
+              color={isActive ? 'primary' : 'inherit'}
+              startIcon={p.icon}
+              onClick={() => setSelectedPeriod(p.id)}
+              sx={{
+                borderRadius: 3,
+                fontSize: '0.78rem',
+                py: 0.4,
+                px: 1.5,
+                fontWeight: isActive ? 700 : 500,
+                borderColor: isActive ? 'primary.main' : 'rgba(255,255,255,0.15)',
+                background: isActive ? undefined : 'rgba(255,255,255,0.03)',
+                '&:hover': {
+                  background: isActive ? undefined : 'rgba(255,255,255,0.08)',
+                  borderColor: isActive ? 'primary.dark' : 'rgba(255,255,255,0.3)'
+                }
+              }}
+            >
+              {p.label}
+            </Button>
+          );
+        })}
+      </Stack>
+
+      {selectedPeriod === 'custom' && (
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ml: { sm: 1 } }}>
+          <TextField
+            size="small"
+            type="date"
+            value={customStartDate}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+            sx={{
+              width: 140,
+              '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: '0.78rem' },
+              '& .MuiOutlinedInput-root': { borderRadius: 2, background: 'rgba(255,255,255,0.05)' }
+            }}
+          />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>to</Typography>
+          <TextField
+            size="small"
+            type="date"
+            value={customEndDate}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+            sx={{
+              width: 140,
+              '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: '0.78rem' },
+              '& .MuiOutlinedInput-root': { borderRadius: 2, background: 'rgba(255,255,255,0.05)' }
+            }}
+          />
+        </Box>
+      )}
+    </Box>
   );
 };
 

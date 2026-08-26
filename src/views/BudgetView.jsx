@@ -1,26 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Button,
-  IconButton,
-  Tooltip
+  Box, Grid, Card, CardContent, Typography,
+  LinearProgress, Button, IconButton, Tooltip, Table,
+  TableHead, TableBody, TableCell, TableRow, TableContainer, Paper
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const BudgetView = () => {
   const { data, filteredTx, setActiveModal, setEditingBudget, deleteBudget } = useFinance();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
 
-  // Group actual expenses by category
   const actualCategorySpent = filteredTx.reduce((acc, t) => {
     if (t.type === 'expense') {
       acc[t.category] = (acc[t.category] || 0) + (parseFloat(t.amount) || 0);
@@ -35,104 +30,114 @@ const BudgetView = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            🎯 Budget vs Actual Spending Tracker
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Set category monthly spending budgets and compare against live actual expenses
-          </Typography>
+          <Typography variant="h5" sx={{ fontWeight: 800 }}>🎯 Budget vs Actual Spending Tracker</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>Set category monthly spending budgets and compare against live actual expenses</Typography>
         </Box>
         <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setActiveModal('add-budget')}>
           + Set Category Budget
         </Button>
       </Box>
 
-      {/* Metrics Row */}
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Budget Target</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', my: 0.5 }}>{formatCurrency(totalBudgeted)}</Typography>
-              <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 600 }}>Planned Spend</Typography>
-            </CardContent>
-          </Card>
+          <Card><CardContent>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Budget Target</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', my: 0.5 }}>{formatCurrency(totalBudgeted)}</Typography>
+            <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 600 }}>Planned Spend</Typography>
+          </CardContent></Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Actual Expense</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: totalActual > totalBudgeted ? '#ef4444' : '#10b981', my: 0.5 }}>{formatCurrency(totalActual)}</Typography>
-              <Typography variant="caption" sx={{ color: totalActual > totalBudgeted ? '#ef4444' : '#10b981', fontWeight: 600 }}>
-                {totalBudgeted > 0 ? ((totalActual / totalBudgeted) * 100).toFixed(1) + '% Budget Used' : 'No Budget'}
-              </Typography>
-            </CardContent>
-          </Card>
+          <Card><CardContent>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Actual Expense</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: totalActual > totalBudgeted ? '#ef4444' : '#10b981', my: 0.5 }}>{formatCurrency(totalActual)}</Typography>
+            <Typography variant="caption" sx={{ color: totalActual > totalBudgeted ? '#ef4444' : '#10b981', fontWeight: 600 }}>
+              {totalBudgeted > 0 ? ((totalActual / totalBudgeted) * 100).toFixed(1) + '% Budget Used' : 'No Budget'}
+            </Typography>
+          </CardContent></Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Remaining Budget Margin</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: totalBudgeted - totalActual >= 0 ? '#10b981' : '#ef4444', my: 0.5 }}>{formatCurrency(totalBudgeted - totalActual)}</Typography>
-              <Typography variant="caption" sx={{ color: totalBudgeted - totalActual >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
-                {totalBudgeted - totalActual >= 0 ? 'Within Budget' : 'Overbudget Alert'}
-              </Typography>
-            </CardContent>
-          </Card>
+          <Card><CardContent>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Remaining Margin</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: totalBudgeted - totalActual >= 0 ? '#10b981' : '#ef4444', my: 0.5 }}>{formatCurrency(totalBudgeted - totalActual)}</Typography>
+            <Typography variant="caption" sx={{ color: totalBudgeted - totalActual >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+              {totalBudgeted - totalActual >= 0 ? 'Within Budget' : 'Overbudget Alert'}
+            </Typography>
+          </CardContent></Card>
         </Grid>
       </Grid>
 
-      {/* Budget Cards Grid */}
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>📊 Category Budget Breakdown</Typography>
-      <Grid container spacing={2.5}>
-        {data.budgets.length === 0 ? (
-          <Grid item xs={12}>
-            <Card sx={{ textAlign: 'center', p: 4 }}>
-              <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>No category budgets set yet.</Typography>
-              <Button variant="contained" color="primary" onClick={() => setActiveModal('add-budget')}>+ Set Category Budget</Button>
-            </Card>
-          </Grid>
-        ) : data.budgets.map(b => {
-          const spent = actualCategorySpent[b.category] || 0;
-          const budget = parseFloat(b.budgetAmount) || 1;
-          const progress = Math.min((spent / budget) * 100, 100);
-          const isOver = spent > budget;
 
-          return (
-            <Grid item xs={12} sm={6} md={4} key={b.id}>
-              <Card sx={{ borderLeft: `4px solid ${isOver ? '#ef4444' : '#10b981'}` }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{b.category}</Typography>
-                    <Box>
-                      <Tooltip title="Edit Budget">
-                        <IconButton size="small" color="primary" onClick={() => { setEditingBudget(b); setActiveModal('add-budget'); }}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete Budget">
-                        <IconButton size="small" color="error" onClick={() => deleteBudget(b.id)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-                  <Box sx={{ mb: 1.5 }}>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <span>Spent: <strong>{formatCurrency(spent)}</strong></span>
-                      <span>Target: <strong>{formatCurrency(budget)}</strong></span>
-                    </Typography>
-                    <LinearProgress variant="determinate" value={progress} color={isOver ? 'error' : 'success'} sx={{ height: 8, borderRadius: 4 }} />
-                  </Box>
-                  <Typography variant="caption" sx={{ color: isOver ? '#ef4444' : '#10b981', fontWeight: 700 }}>
-                    {isOver ? `Overby ${formatCurrency(spent - budget)}` : `${(100 - progress).toFixed(0)}% Left (${formatCurrency(budget - spent)})`}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
+      {data.budgets.length === 0 ? (
+        <Card sx={{ textAlign: 'center', p: 4 }}>
+          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>No category budgets set yet.</Typography>
+          <Button variant="contained" color="primary" onClick={() => setActiveModal('add-budget')}>+ Set Category Budget</Button>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent sx={{ p: 0 }}>
+            <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Budget Target</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Actual Spent</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Remaining</TableCell>
+                    <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>Progress</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.budgets.map(b => {
+                    const spent = actualCategorySpent[b.category] || 0;
+                    const budget = parseFloat(b.budgetAmount) || 1;
+                    const progress = Math.min((spent / budget) * 100, 100);
+                    const isOver = spent > budget;
+                    return (
+                      <TableRow key={b.id} hover>
+                        <TableCell><strong>{b.category}</strong></TableCell>
+                        <TableCell>{formatCurrency(budget)}</TableCell>
+                        <TableCell sx={{ color: isOver ? '#ef4444' : 'inherit', fontWeight: isOver ? 700 : 400 }}>{formatCurrency(spent)}</TableCell>
+                        <TableCell sx={{ color: isOver ? '#ef4444' : '#10b981', fontWeight: 700 }}>{formatCurrency(budget - spent)}</TableCell>
+                        <TableCell>
+                          <LinearProgress variant="determinate" value={progress} color={isOver ? 'error' : 'success'} sx={{ height: 8, borderRadius: 4 }} />
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{progress.toFixed(0)}%</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" sx={{ color: isOver ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                            {isOver ? `Over by ${formatCurrency(spent - budget)}` : `${formatCurrency(budget - spent)} left`}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Tooltip title="Edit Budget">
+                            <IconButton size="small" color="primary" onClick={() => { setEditingBudget(b); setActiveModal('add-budget'); }}>
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Budget">
+                            <IconButton size="small" color="error" onClick={() => setDeleteTarget(b)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteBudget(deleteTarget.id)}
+        label={deleteTarget ? `budget for "${deleteTarget.category}"` : ''}
+      />
     </Box>
   );
 };

@@ -25,7 +25,7 @@ const SHEET_HEADER_CONFIG = {
   'Given_Loan': ['ID', 'Borrower Name', 'Amount Given', 'Interest Rate %', 'Date Given', 'Due Date', 'Amount Repaid', 'Outstanding Owed'],
   'Taken_Loan': ['ID', 'Lender Name', 'Amount Borrowed', 'Interest Rate %', 'Date Taken', 'Due Date', 'Amount Repaid', 'Outstanding Balance'],
   'Budget_vs_Actual': ['ID', 'Category', 'Target Budget Amount'],
-  'Bills_Subscriptions': ['ID', 'Bill Name', 'Category', 'Amount', 'Due Day', 'Status'],
+  'Bills_Subscriptions': ['ID', 'Bill Name', 'Category', 'Amount', 'Start Date', 'End Date', 'Status'],
   'Goals': ['ID', 'Goal Title', 'Target Amount', 'Saved Amount', 'Target Date'],
   'Reviews': ['ID', 'Date', 'Review Type', 'Grade', 'Notes']
 };
@@ -49,6 +49,8 @@ export const FinanceProvider = ({ children }) => {
   const [editingBill, setEditingBill] = useState(null);
   const [editingGoal, setEditingGoal] = useState(null);
   const [editingReview, setEditingReview] = useState(null);
+  const [editingLoanGiven, setEditingLoanGiven] = useState(null);
+  const [editingLoanTaken, setEditingLoanTaken] = useState(null);
 
   const sheetId = "1vCTXo6Mu172AaTPKfOPNeqnXsJA1oIWfV5HEurXm0ik";
   const clientId = "223951688164-fpfp028pti606lavi5iel7rihgts878v.apps.googleusercontent.com";
@@ -199,7 +201,7 @@ export const FinanceProvider = ({ children }) => {
 
     try {
       // Batch fetch values from Sheet1, Credit, Debit, Trade, Given_Loan, Taken_Loan, Budget_vs_Actual, Bills_Subscriptions, Goals, Reviews
-      const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?ranges=Sheet1!A:H&ranges=Credit!A:G&ranges=Debit!A:F&ranges=Trade!A:H&ranges=Given_Loan!A:H&ranges=Taken_Loan!A:H&ranges=Budget_vs_Actual!A:C&ranges=Bills_Subscriptions!A:F&ranges=Goals!A:E&ranges=Reviews!A:E`;
+      const batchUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?ranges=Sheet1!A:H&ranges=Credit!A:G&ranges=Debit!A:F&ranges=Trade!A:H&ranges=Given_Loan!A:H&ranges=Taken_Loan!A:H&ranges=Budget_vs_Actual!A:C&ranges=Bills_Subscriptions!A:G&ranges=Goals!A:E&ranges=Reviews!A:E`;
       const json = await apiFetch(batchUrl, {}, token);
 
       if (json && json.valueRanges) {
@@ -251,7 +253,7 @@ export const FinanceProvider = ({ children }) => {
 
         // 8. Bills & Subscriptions (Bills_Subscriptions)
         const parsedBills = extractRows(ranges[7]).map((r, idx) => ({
-          id: r[0] || `bill-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Service', category: r[2] || 'Subscription', amount: parseFloat(r[3]) || 0, dueDate: r[4] || '5', status: r[5] || 'DUE'
+          id: r[0] || `bill-${idx + 2}`, sheetRowIndex: idx + 2, name: r[1] || 'Service', category: r[2] || 'Subscription', amount: parseFloat(r[3]) || 0, startDate: r[4] || '', endDate: r[5] || '', status: r[6] || 'ACTIVE'
         }));
 
         // 9. Financial Goals (Goals)
@@ -298,29 +300,32 @@ export const FinanceProvider = ({ children }) => {
 
   // Google Sign In
   const handleGoogleLogin = () => {
-    if (typeof window.google === 'undefined' || !window.google.accounts?.oauth2) {
-      alert("Google OAuth API loading... Please check internet connection.");
-      return;
-    }
-
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: scopes,
-      callback: async r => {
-        if (r.error) return alert("OAuth Error: " + JSON.stringify(r));
-        setAccessToken(r.access_token);
-        setIsAuthenticated(true);
-
-        const expiresInSec = r.expires_in ? parseInt(r.expires_in, 10) : 3500;
-        const expiresAt = Date.now() + expiresInSec * 1000;
-        localStorage.setItem("g_access_token", r.access_token);
-        localStorage.setItem("g_token_expires", expiresAt.toString());
-
-        await loadAllSheetsFromGoogle(r.access_token);
-        alert("Google Sheet connected! Shifted headers to Row 1 and frozen all tabs.");
+    const doLogin = () => {
+      if (typeof window.google === 'undefined' || !window.google.accounts?.oauth2) {
+        console.warn('Google Identity Services not yet loaded, retrying in 500ms...');
+        setTimeout(doLogin, 500);
+        return;
       }
-    });
-    client.requestAccessToken({ prompt: 'consent' });
+
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: scopes,
+        callback: async r => {
+          if (r.error) return console.error("OAuth Error:", r);
+          setAccessToken(r.access_token);
+          setIsAuthenticated(true);
+
+          const expiresInSec = r.expires_in ? parseInt(r.expires_in, 10) : 3500;
+          const expiresAt = Date.now() + expiresInSec * 1000;
+          localStorage.setItem("g_access_token", r.access_token);
+          localStorage.setItem("g_token_expires", expiresAt.toString());
+
+          await loadAllSheetsFromGoogle(r.access_token);
+        }
+      });
+      client.requestAccessToken({ prompt: 'consent' });
+    };
+    doLogin();
   };
 
   const handleGoogleLogout = () => {
@@ -334,15 +339,15 @@ export const FinanceProvider = ({ children }) => {
   // Live Append Row to Google Sheet (Ensures header exists first if sheet is empty)
   const appendRowToSheet = async (values, sheetTabName) => {
     const token = accessToken || localStorage.getItem('g_access_token');
-    if (!token) return;
+    if (!token) { console.warn('appendRowToSheet: no token'); return; }
     try {
       const headers = SHEET_HEADER_CONFIG[sheetTabName];
+      // Check if Row 1 is empty – if so, write headers first
       const checkRes = await apiFetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A1:A1`, {}, token);
       if (!checkRes || !checkRes.values || checkRes.values.length === 0) {
-        // First row is empty, write header to Row 1 first
         if (headers) {
           await apiFetch(
-            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A1:Z1?valueInputOption=USER_ENTERED`,
+            `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName + '!A1:Z1')}?valueInputOption=USER_ENTERED`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -353,8 +358,9 @@ export const FinanceProvider = ({ children }) => {
         }
       }
 
+      // FIX: correct append URL — range goes before :append suffix
       await apiFetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName)}!A:Z:append?valueInputOption=USER_ENTERED`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetTabName + '!A:Z')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -362,7 +368,7 @@ export const FinanceProvider = ({ children }) => {
         },
         token
       );
-      console.log(`Live appended row to Google Sheet tab: ${sheetTabName}`);
+      console.log(`✅ Live appended row to Google Sheet tab: ${sheetTabName}`);
     } catch (e) {
       console.warn(`Append error on ${sheetTabName}:`, e);
     }
@@ -498,10 +504,51 @@ export const FinanceProvider = ({ children }) => {
     }));
   };
 
+  // Universal deleteTransaction — searches across ALL data arrays by id
   const deleteTransaction = (id) => {
-    const target = data.transactions.find(t => t.id === id);
-    if (target && target.sheetRowIndex) deleteRowInSheet('Sheet1', target.sheetRowIndex);
-    setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+    // Check transactions (Sheet1)
+    const tx = data.transactions.find(t => t.id === id);
+    if (tx) {
+      if (tx.sheetRowIndex) deleteRowInSheet('Sheet1', tx.sheetRowIndex);
+      setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+      return;
+    }
+    // Check credit cards (Credit tab)
+    const card = data.creditCards.find(c => c.id === id);
+    if (card) {
+      if (card.sheetRowIndex) deleteRowInSheet('Credit', card.sheetRowIndex);
+      setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
+      return;
+    }
+    // Check bank accounts (Debit tab)
+    const bank = data.bankAccounts.find(b => b.id === id);
+    if (bank) {
+      if (bank.sheetRowIndex) deleteRowInSheet('Debit', bank.sheetRowIndex);
+      setData(prev => ({ ...prev, bankAccounts: prev.bankAccounts.filter(b => b.id !== id) }));
+      return;
+    }
+    // Check investments (Trade tab)
+    const inv = data.investments.find(i => i.id === id);
+    if (inv) {
+      if (inv.sheetRowIndex) deleteRowInSheet('Trade', inv.sheetRowIndex);
+      setData(prev => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
+      return;
+    }
+    // Check loans given (Given_Loan tab)
+    const given = data.loansGiven.find(l => l.id === id);
+    if (given) {
+      if (given.sheetRowIndex) deleteRowInSheet('Given_Loan', given.sheetRowIndex);
+      setData(prev => ({ ...prev, loansGiven: prev.loansGiven.filter(l => l.id !== id) }));
+      return;
+    }
+    // Check loans taken (Taken_Loan tab)
+    const taken = data.loansTaken.find(l => l.id === id);
+    if (taken) {
+      if (taken.sheetRowIndex) deleteRowInSheet('Taken_Loan', taken.sheetRowIndex);
+      setData(prev => ({ ...prev, loansTaken: prev.loansTaken.filter(l => l.id !== id) }));
+      return;
+    }
+    console.warn('deleteTransaction: id not found in any data array:', id);
   };
 
   const addCreditCard = (card) => {
@@ -523,15 +570,43 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const addLoanGiven = (loan) => {
-    const newLoan = { ...loan, id: 'loan-given-' + Date.now() };
+    const newLoan = { ...loan, id: 'loan-given-' + Date.now(), sheetRowIndex: data.loansGiven.length + 2 };
     setData(prev => ({ ...prev, loansGiven: [newLoan, ...prev.loansGiven] }));
     appendRowToSheet([newLoan.id, newLoan.borrowerName, newLoan.amountGiven, newLoan.interestRate, newLoan.dateGiven, newLoan.dueDate, newLoan.amountRepaid, newLoan.outstandingOwed], 'Given_Loan');
   };
 
+  const editLoanGiven = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      loansGiven: prev.loansGiven.map(l => {
+        if (l.id === id) {
+          const item = { ...l, ...updated };
+          updateRowInSheet('Given_Loan', item.sheetRowIndex || 2, [item.id, item.borrowerName, item.amountGiven, item.interestRate, item.dateGiven, item.dueDate, item.amountRepaid, item.outstandingOwed]);
+          return item;
+        }
+        return l;
+      })
+    }));
+  };
+
   const addLoanTaken = (loan) => {
-    const newLoan = { ...loan, id: 'loan-taken-' + Date.now() };
+    const newLoan = { ...loan, id: 'loan-taken-' + Date.now(), sheetRowIndex: data.loansTaken.length + 2 };
     setData(prev => ({ ...prev, loansTaken: [newLoan, ...prev.loansTaken] }));
     appendRowToSheet([newLoan.id, newLoan.lenderName, newLoan.amountTaken, newLoan.interestRate, newLoan.dateTaken, newLoan.dueDate, newLoan.amountRepaid, newLoan.outstandingBalance], 'Taken_Loan');
+  };
+
+  const editLoanTaken = (id, updated) => {
+    setData(prev => ({
+      ...prev,
+      loansTaken: prev.loansTaken.map(l => {
+        if (l.id === id) {
+          const item = { ...l, ...updated };
+          updateRowInSheet('Taken_Loan', item.sheetRowIndex || 2, [item.id, item.lenderName, item.amountTaken, item.interestRate, item.dateTaken, item.dueDate, item.amountRepaid, item.outstandingBalance]);
+          return item;
+        }
+        return l;
+      })
+    }));
   };
 
   const addBudget = (budget) => {
@@ -563,7 +638,7 @@ export const FinanceProvider = ({ children }) => {
   const addBill = (bill) => {
     const newBill = { ...bill, id: 'bill-' + Date.now(), sheetRowIndex: data.bills.length + 2 };
     setData(prev => ({ ...prev, bills: [...prev.bills, newBill] }));
-    appendRowToSheet([newBill.id, newBill.name, newBill.category, newBill.amount, newBill.dueDate, newBill.status], 'Bills_Subscriptions');
+    appendRowToSheet([newBill.id, newBill.name, newBill.category, newBill.amount, newBill.startDate, newBill.endDate, newBill.status], 'Bills_Subscriptions');
   };
 
   const editBill = (id, updated) => {
@@ -572,7 +647,7 @@ export const FinanceProvider = ({ children }) => {
       bills: prev.bills.map(b => {
         if (b.id === id) {
           const item = { ...b, ...updated };
-          updateRowInSheet('Bills_Subscriptions', item.sheetRowIndex || 2, [item.id, item.name, item.category, item.amount, item.dueDate, item.status]);
+          updateRowInSheet('Bills_Subscriptions', item.sheetRowIndex || 2, [item.id, item.name, item.category, item.amount, item.startDate, item.endDate, item.status]);
           return item;
         }
         return b;
@@ -656,6 +731,8 @@ export const FinanceProvider = ({ children }) => {
       editingBill, setEditingBill,
       editingGoal, setEditingGoal,
       editingReview, setEditingReview,
+      editingLoanGiven, setEditingLoanGiven,
+      editingLoanTaken, setEditingLoanTaken,
       netWorth,
       savingsRate,
       totalBankBalance,
@@ -671,8 +748,8 @@ export const FinanceProvider = ({ children }) => {
       addCreditCard,
       addBankAccount,
       addTrade,
-      addLoanGiven,
-      addLoanTaken,
+      addLoanGiven, editLoanGiven,
+      addLoanTaken, editLoanTaken,
       addBudget, editBudget, deleteBudget,
       addBill, editBill, deleteBill,
       addGoal, editGoal, deleteGoal,

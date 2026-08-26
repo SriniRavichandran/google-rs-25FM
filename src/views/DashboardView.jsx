@@ -20,9 +20,14 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const DashboardView = () => {
+  const [
+    deleteTarget, setDeleteTarget
+  ] = React.useState(null);
+
   const {
     netWorth,
     savingsRate,
@@ -147,7 +152,7 @@ const DashboardView = () => {
         </Button>
         <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-credit-card')}>+ Add Credit Card</Button>
         <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-bank-account')}>+ Add Bank Account</Button>
-        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-cashflow')}>+ Add Transaction</Button>
+        <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-transaction')}>+ Add Transaction</Button>
         <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-trade')}>+ Log Trade / Asset</Button>
         <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-loan-given')}>+ Add Loan Given</Button>
         <Button variant="outlined" color="inherit" onClick={() => setActiveModal('add-loan-taken')}>+ Add Loan Taken</Button>
@@ -211,7 +216,7 @@ const DashboardView = () => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete Row">
-                        <IconButton size="small" color="error" onClick={() => deleteTransaction(t.id)}>
+                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(t)}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -223,6 +228,13 @@ const DashboardView = () => {
           </TableContainer>
         </CardContent>
       </Card>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteTransaction(deleteTarget.id)}
+        label={deleteTarget ? `transaction "${deleteTarget.category} (${deleteTarget.date})"` : ''}
+      />
     </Box>
   );
 };

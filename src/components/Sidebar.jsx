@@ -32,9 +32,9 @@ const Sidebar = () => {
 
   const coreNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon color="primary" /> },
-    { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCardIcon style={{ color: '#ef4444' }} /> },
-    { id: 'bank-accounts', label: 'Debit Cards & Bank', icon: <AccountBalanceIcon style={{ color: '#38bdf8' }} /> },
     { id: 'cash-flow', label: 'Cash Flow', icon: <AttachMoneyIcon style={{ color: '#10b981' }} /> },
+    { id: 'bank-accounts', label: 'Debit Cards & Bank', icon: <AccountBalanceIcon style={{ color: '#38bdf8' }} /> },
+    { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCardIcon style={{ color: '#ef4444' }} /> },
     { id: 'investments', label: 'Trade & Investments', icon: <TrendingUpIcon style={{ color: '#f59e0b' }} /> },
     { id: 'loans-given', label: 'Loans Given', icon: <HandshakeIcon style={{ color: '#10b981' }} /> },
     { id: 'loans-taken', label: 'Loans Taken', icon: <MoneyOffIcon style={{ color: '#ef4444' }} /> },

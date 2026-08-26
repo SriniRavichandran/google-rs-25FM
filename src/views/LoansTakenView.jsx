@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -13,13 +13,19 @@ import {
   TableContainer,
   Paper,
   Chip,
-  Button
+  Button,
+  IconButton,
+  Tooltip
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const LoansTakenView = () => {
-  const { data, totalLoansTaken, setActiveModal } = useFinance();
+  const { data, totalLoansTaken, setActiveModal, deleteTransaction, setEditingLoanTaken } = useFinance();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
 
@@ -97,6 +103,7 @@ const LoansTakenView = () => {
                   <TableCell sx={{ fontWeight: 700 }}>Amount Repaid</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Outstanding Debt</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -121,6 +128,18 @@ const LoansTakenView = () => {
                       <TableCell>
                         <Chip label={isPaid ? 'PAID OFF' : 'ACTIVE DEBT'} size="small" color={isPaid ? 'success' : 'error'} sx={{ fontWeight: 700 }} />
                       </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Edit Loan">
+                          <IconButton size="small" color="primary" onClick={() => { setEditingLoanTaken(l); setActiveModal('add-loan-taken'); }}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Loan">
+                          <IconButton size="small" color="error" onClick={() => setDeleteTarget(l)}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -129,6 +148,13 @@ const LoansTakenView = () => {
           </TableContainer>
         </CardContent>
       </Card>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteTransaction(deleteTarget.id)}
+        label={deleteTarget ? `loan taken from "${deleteTarget.lenderName}"` : ''}
+      />
     </Box>
   );
 };

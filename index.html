@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>RS-25F MIND — React 3D Personal Finance Tracker</title>
-  <meta name="description" content="RS-25F MIND 3D Personal Finance Tracker built with React, Vite, Three.js, and Google Sheets API v4.">
+  <meta name="description" content="RS-25F MIND 3D Personal Finance Tracker built with React, Vite, Three.js, MUI, and Google Sheets API v4.">
 
-  <!-- PWA Manifest & Web App Capabilities -->
+  <!-- Google Fonts Preconnect & Stylesheets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- PWA Manifest & App Icons -->
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,14 +21,10 @@
   <meta name="theme-color" content="#070b14">
 
   <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
-
-  <!-- React Mounting Root Container -->
   <div id="root"></div>
-
-  <!-- Vite React Entry Point -->
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

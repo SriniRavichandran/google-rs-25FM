@@ -1,18 +1,11 @@
 /* RS-25F MIND PWA Service Worker */
-const CACHE_NAME = 'rs25f-mind-v1';
+const CACHE_NAME = 'rs25f-mind-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './css/main.css',
-  './css/components.css',
-  './css/3d-theme.css',
-  './js/config.js',
-  './js/app.js',
-  './js/storage.js',
-  './js/google-sheets-api.js',
-  './js/3d-scene.js',
-  './RS-25F Mind.png'
+  './RS-25F Mind.png',
+  './logo.png'
 ];
 
 self.addEventListener('install', (e) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -13,10 +13,12 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const ReviewsView = () => {
   const { data, setActiveModal, setEditingReview, deleteReview } = useFinance();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -60,7 +62,7 @@ const ReviewsView = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete Note">
-                      <IconButton size="small" color="error" onClick={() => deleteReview(r.id)}>
+                      <IconButton size="small" color="error" onClick={() => setDeleteTarget(r)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -74,6 +76,13 @@ const ReviewsView = () => {
           </Grid>
         ))}
       </Grid>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteReview(deleteTarget.id)}
+        label={deleteTarget ? `review note "${deleteTarget.type} (${deleteTarget.date})"` : ''}
+      />
     </Box>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -13,10 +13,12 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const GoalsView = () => {
   const { data, setActiveModal, setEditingGoal, deleteGoal } = useFinance();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
 
@@ -99,7 +101,7 @@ const GoalsView = () => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete Goal">
-                        <IconButton size="small" color="error" onClick={() => deleteGoal(g.id)}>
+                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(g)}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -122,6 +124,13 @@ const GoalsView = () => {
           );
         })}
       </Grid>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteGoal(deleteTarget.id)}
+        label={deleteTarget ? `goal "${deleteTarget.title}"` : ''}
+      />
     </Box>
   );
 };
