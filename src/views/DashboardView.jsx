@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
   Card,
   CardContent,
   Typography,
+  Chip,
+  Button,
+  IconButton,
+  Tooltip,
   Table,
   TableHead,
   TableBody,
@@ -12,10 +16,8 @@ import {
   TableRow,
   TableContainer,
   Paper,
-  Chip,
-  Button,
-  IconButton,
-  Tooltip
+  Tabs,
+  Tab
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,11 +26,12 @@ import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const DashboardView = () => {
-  const [
-    deleteTarget, setDeleteTarget
-  ] = React.useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteType, setDeleteType] = useState('tx'); // 'tx', 'card', 'bank', 'trade'
+  const [activeTab, setActiveTab] = useState('cash');
 
   const {
+    data,
     netWorth,
     savingsRate,
     totalBankBalance,
@@ -38,11 +41,28 @@ const DashboardView = () => {
     filteredTx,
     setActiveModal,
     setEditingTx,
-    deleteTransaction
+    setEditingCreditCard,
+    setEditingBankAccount,
+    setEditingTrade,
+    setEditingLoanGiven,
+    setEditingLoanTaken,
+    deleteTransaction,
+    deleteCreditCard,
+    deleteBankAccount,
+    deleteTrade
   } = useFinance();
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    if (deleteType === 'tx') deleteTransaction(deleteTarget.id);
+    else if (deleteType === 'card') deleteCreditCard(deleteTarget.id);
+    else if (deleteType === 'bank') deleteBankAccount(deleteTarget.id);
+    else if (deleteType === 'trade') deleteTrade(deleteTarget.id);
+    setDeleteTarget(null);
   };
 
   return (
@@ -145,88 +165,252 @@ const DashboardView = () => {
         </Grid>
       </Grid>
 
-      {/* Action Buttons */}
+      {/* Quick Add Action Buttons */}
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
         <Button size="small" variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => { setEditingTx(null); setActiveModal('add-transaction'); }}>
-          Add Row / Amount
+          Add Transaction (Cash)
         </Button>
-        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setActiveModal('add-credit-card'); }}>Add Credit Card</Button>
-        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setActiveModal('add-bank-account'); }}>Add Bank Account</Button>
-        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setEditingTx(null); setActiveModal('add-transaction'); }}>Add Transaction</Button>
-        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setActiveModal('add-trade'); }}>Log Trade / Asset</Button>
-        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setActiveModal('add-loan-given'); }}>Add Loan Given</Button>
-        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setActiveModal('add-loan-taken'); }}>Add Loan Taken</Button>
+        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setEditingCreditCard(null); setActiveModal('add-credit-card'); }}>Add Credit Card</Button>
+        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setEditingBankAccount(null); setActiveModal('add-bank-account'); }}>Add Bank Account (Debit)</Button>
+        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setEditingTrade(null); setActiveModal('add-trade'); }}>Log Trade / Asset</Button>
+        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setEditingLoanGiven(null); setActiveModal('add-loan-given'); }}>Add Loan Given</Button>
+        <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={() => { setEditingLoanTaken(null); setActiveModal('add-loan-taken'); }}>Add Loan Taken</Button>
       </Box>
 
-      {/* Table */}
+      {/* Multi-Tab Financial Data Manager */}
       <Card sx={{ width: '100%', overflow: 'hidden' }}>
         <CardContent sx={{ p: 0 }}>
-          <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-                🧾 Live Transaction Log ({selectedPeriod.toUpperCase()})
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Direct live sync & edit to Google Sheet1 / Cash
-              </Typography>
-            </Box>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', px: { xs: 1.5, sm: 2 } }}>
+            <Tabs
+              value={activeTab}
+              onChange={(e, val) => setActiveTab(val)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': { fontWeight: 700, fontSize: { xs: '0.8rem', sm: '0.9rem' }, py: 1.5 }
+              }}
+            >
+              <Tab value="cash" label={`💵 Cash & Transactions (${filteredTx.length})`} />
+              <Tab value="credit" label={`💳 Credit Cards (${data.creditCards.length})`} />
+              <Tab value="debit" label={`🏦 Bank Accounts & Debit (${data.bankAccounts.length})`} />
+              <Tab value="trade" label={`📈 Trade & Assets (${data.investments.length})`} />
+            </Tabs>
           </Box>
 
           <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent', width: '100%', overflowX: 'auto' }}>
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead>
-                <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
-                  <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Date</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Amount</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Payment Method</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Account</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredTx.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                      No records found for {selectedPeriod}. Click <strong>"Add Row / Amount"</strong> to add an entry!
-                    </TableCell>
+            {activeTab === 'cash' && (
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Date</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Type</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Amount</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Payment Method</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Account</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
                   </TableRow>
-                ) : filteredTx.map((t, idx) => (
-                  <TableRow key={t.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.date}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{t.category}</strong></TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                      <Chip
-                        label={t.type.toUpperCase()}
-                        size="small"
-                        color={t.type === 'income' ? 'success' : t.type === 'expense' ? 'error' : 'info'}
-                        sx={{ fontWeight: 700, borderRadius: 2 }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444', whiteSpace: 'nowrap' }}>
-                      {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.paymentMethod}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.account}</TableCell>
-                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                      <Tooltip title="Edit Row">
-                        <IconButton size="small" color="primary" onClick={() => { setEditingTx(t); setActiveModal('add-transaction'); }}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete Row">
-                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(t)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
+                </TableHead>
+                <TableBody>
+                  {filteredTx.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        No transaction records found for {selectedPeriod}. Click <strong>"Add Transaction (Cash)"</strong> to add an entry!
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredTx.map((t, idx) => (
+                    <TableRow key={t.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.date}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{t.category}</strong></TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        <Chip
+                          label={t.type.toUpperCase()}
+                          size="small"
+                          color={t.type === 'income' ? 'success' : t.type === 'expense' ? 'error' : 'info'}
+                          sx={{ fontWeight: 700, borderRadius: 2 }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444', whiteSpace: 'nowrap' }}>
+                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.paymentMethod}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.account}</TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Tooltip title="Edit Cash Transaction">
+                          <IconButton size="small" color="primary" onClick={() => { setEditingTx(t); setActiveModal('add-transaction'); }}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Cash Transaction">
+                          <IconButton size="small" color="error" onClick={() => { setDeleteTarget(t); setDeleteType('tx'); }}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+
+            {activeTab === 'credit' && (
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Card Name</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Bank • Network</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Total Limit</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Outstanding</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Utilization</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Due Date</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {data.creditCards.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        No credit cards logged. Click <strong>"Add Credit Card"</strong> to register!
+                      </TableCell>
+                    </TableRow>
+                  ) : data.creditCards.map((c, idx) => {
+                    const util = c.limit > 0 ? (c.outstanding / c.limit) * 100 : 0;
+                    return (
+                      <TableRow key={c.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{c.name}</strong></TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{c.bank} • {c.network}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(c.limit)}</TableCell>
+                        <TableCell sx={{ color: '#ef4444', fontWeight: 700, whiteSpace: 'nowrap' }}>{formatCurrency(c.outstanding)}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          <Chip label={`${util.toFixed(1)}%`} size="small" color={util > 50 ? 'error' : 'success'} sx={{ fontWeight: 700 }} />
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>Day {c.dueDate}</TableCell>
+                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                          <Tooltip title="Edit Credit Card">
+                            <IconButton size="small" color="primary" onClick={() => { setEditingCreditCard(c); setActiveModal('add-credit-card'); }}>
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Credit Card">
+                            <IconButton size="small" color="error" onClick={() => { setDeleteTarget(c); setDeleteType('card'); }}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+
+            {activeTab === 'debit' && (
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Account Name</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Bank</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Type</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Account No.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Balance</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.bankAccounts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        No bank accounts logged. Click <strong>"Add Bank Account (Debit)"</strong> to register!
+                      </TableCell>
+                    </TableRow>
+                  ) : data.bankAccounts.map((a, idx) => (
+                    <TableRow key={a.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{a.name}</strong></TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.bank}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}><Chip label={a.type} size="small" color="primary" sx={{ fontWeight: 700 }} /></TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>**** {a.accountNumber}</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: '#10b981', whiteSpace: 'nowrap' }}>{formatCurrency(a.balance)}</TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Tooltip title="Edit Bank Account / Debit">
+                          <IconButton size="small" color="primary" onClick={() => { setEditingBankAccount(a); setActiveModal('add-bank-account'); }}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Bank Account">
+                          <IconButton size="small" color="error" onClick={() => { setDeleteTarget(a); setDeleteType('bank'); }}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+
+            {activeTab === 'trade' && (
+              <Table sx={{ minWidth: 750 }}>
+                <TableHead>
+                  <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Asset Name</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Type</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Action</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Qty</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Buy Price</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Current Price</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Current Value</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>P&L</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {data.investments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        No trade positions logged. Click <strong>"Log Trade / Asset"</strong> to register!
+                      </TableCell>
+                    </TableRow>
+                  ) : data.investments.map((inv, idx) => {
+                    const itemPnL = inv.currentValue - inv.investedAmount;
+                    const itemRoi = inv.investedAmount > 0 ? (itemPnL / inv.investedAmount) * 100 : 0;
+                    return (
+                      <TableRow key={inv.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{inv.name}</strong></TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}><Chip label={inv.type} size="small" color="primary" sx={{ fontWeight: 700 }} /></TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}><Chip label={inv.action || 'BUY'} size="small" color="info" sx={{ fontWeight: 700 }} /></TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{inv.quantity}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(inv.buyPrice)}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(inv.currentPrice)}</TableCell>
+                        <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{formatCurrency(inv.currentValue)}</TableCell>
+                        <TableCell sx={{ fontWeight: 800, color: itemPnL >= 0 ? '#10b981' : '#ef4444', whiteSpace: 'nowrap' }}>
+                          {itemPnL >= 0 ? '+' : ''}{formatCurrency(itemPnL)} ({itemRoi.toFixed(1)}%)
+                        </TableCell>
+                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                          <Tooltip title="Edit Trade / Asset">
+                            <IconButton size="small" color="primary" onClick={() => { setEditingTrade(inv); setActiveModal('add-trade'); }}>
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Trade / Asset">
+                            <IconButton size="small" color="error" onClick={() => { setDeleteTarget(inv); setDeleteType('trade'); }}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </TableContainer>
         </CardContent>
       </Card>
@@ -234,8 +418,18 @@ const DashboardView = () => {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && deleteTransaction(deleteTarget.id)}
-        label={deleteTarget ? `transaction "${deleteTarget.category} (${deleteTarget.date})"` : ''}
+        onConfirm={handleDeleteConfirm}
+        label={
+          deleteTarget
+            ? deleteType === 'tx'
+              ? `transaction "${deleteTarget.category} (${deleteTarget.date})"`
+              : deleteType === 'card'
+              ? `credit card "${deleteTarget.name}"`
+              : deleteType === 'bank'
+              ? `bank account "${deleteTarget.name}"`
+              : `trade asset "${deleteTarget.name}"`
+            : ''
+        }
       />
     </Box>
   );
