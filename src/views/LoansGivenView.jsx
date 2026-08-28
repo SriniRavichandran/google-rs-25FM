@@ -131,16 +131,36 @@ const LoansGivenView = () => {
                         <Chip label={isPaid ? 'REPAID' : 'ACTIVE'} size="small" color={isPaid ? 'success' : 'error'} sx={{ fontWeight: 700 }} />
                       </TableCell>
                       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                        <Tooltip title="Edit Loan">
-                          <IconButton size="small" color="primary" onClick={() => { setEditingLoanGiven(l); setActiveModal('add-loan-given'); }}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete Loan">
-                          <IconButton size="small" color="error" onClick={() => setDeleteTarget(l)}>
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                          <Tooltip title="Edit Loan Given">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                color: '#38bdf8',
+                                background: 'rgba(56, 189, 248, 0.15)',
+                                border: '1px solid rgba(56, 189, 248, 0.3)',
+                                '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                              }}
+                              onClick={() => { setEditingLoanGiven(l); setActiveModal('add-loan-given'); }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Loan Given">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                color: '#ef4444',
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                              }}
+                              onClick={() => setDeleteTarget(l)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   );

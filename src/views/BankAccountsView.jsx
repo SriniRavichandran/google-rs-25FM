@@ -210,23 +210,39 @@ const BankAccountsView = () => {
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>**** {a.accountNumber}</TableCell>
                         <TableCell sx={{ fontWeight: 700, color: '#10b981', whiteSpace: 'nowrap' }}>{formatCurrency(a.balance)}</TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                          <Tooltip title="Edit Bank Account / Debit">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => {
-                                setEditingBankAccount(a);
-                                setActiveModal('add-bank-account');
-                              }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete Bank Account">
-                            <IconButton size="small" color="error" onClick={() => setDeleteTarget(a)}>
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                            <Tooltip title="Edit Bank Account / Debit">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#38bdf8',
+                                  background: 'rgba(56, 189, 248, 0.15)',
+                                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                                  '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                                }}
+                                onClick={() => {
+                                  setEditingBankAccount(a);
+                                  setActiveModal('add-bank-account');
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Bank Account">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#ef4444',
+                                  background: 'rgba(239, 68, 68, 0.15)',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                                  '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                                }}
+                                onClick={() => setDeleteTarget(a)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     ))}

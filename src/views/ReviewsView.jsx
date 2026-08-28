@@ -60,12 +60,30 @@ const ReviewsView = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip label={`Grade ${r.grade}`} size="small" color="success" sx={{ fontWeight: 800 }} />
                     <Tooltip title="Edit Note">
-                      <IconButton size="small" color="primary" onClick={() => { setEditingReview(r); setActiveModal('add-review'); }}>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: '#38bdf8',
+                          background: 'rgba(56, 189, 248, 0.15)',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                        }}
+                        onClick={() => { setEditingReview(r); setActiveModal('add-review'); }}
+                      >
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete Note">
-                      <IconButton size="small" color="error" onClick={() => setDeleteTarget(r)}>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: '#ef4444',
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                        }}
+                        onClick={() => setDeleteTarget(r)}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

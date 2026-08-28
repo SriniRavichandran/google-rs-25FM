@@ -238,16 +238,36 @@ const DashboardView = () => {
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.paymentMethod}</TableCell>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{t.account}</TableCell>
                       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                        <Tooltip title="Edit Cash Transaction">
-                          <IconButton size="small" color="primary" onClick={() => { setEditingTx(t); setActiveModal('add-transaction'); }}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete Cash Transaction">
-                          <IconButton size="small" color="error" onClick={() => { setDeleteTarget(t); setDeleteType('tx'); }}>
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                          <Tooltip title="Edit Cash Transaction">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                color: '#38bdf8',
+                                background: 'rgba(56, 189, 248, 0.15)',
+                                border: '1px solid rgba(56, 189, 248, 0.3)',
+                                '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                              }}
+                              onClick={() => { setEditingTx(t); setActiveModal('add-transaction'); }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Cash Transaction">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                color: '#ef4444',
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                              }}
+                              onClick={() => { setDeleteTarget(t); setDeleteType('tx'); }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -290,16 +310,36 @@ const DashboardView = () => {
                         </TableCell>
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>Day {c.dueDate}</TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                          <Tooltip title="Edit Credit Card">
-                            <IconButton size="small" color="primary" onClick={() => { setEditingCreditCard(c); setActiveModal('add-credit-card'); }}>
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete Credit Card">
-                            <IconButton size="small" color="error" onClick={() => { setDeleteTarget(c); setDeleteType('card'); }}>
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                            <Tooltip title="Edit Credit Card">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#38bdf8',
+                                  background: 'rgba(56, 189, 248, 0.15)',
+                                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                                  '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                                }}
+                                onClick={() => { setEditingCreditCard(c); setActiveModal('add-credit-card'); }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Credit Card">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#ef4444',
+                                  background: 'rgba(239, 68, 68, 0.15)',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                                  '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                                }}
+                                onClick={() => { setDeleteTarget(c); setDeleteType('card'); }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     );
@@ -337,16 +377,36 @@ const DashboardView = () => {
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>**** {a.accountNumber}</TableCell>
                       <TableCell sx={{ fontWeight: 700, color: '#10b981', whiteSpace: 'nowrap' }}>{formatCurrency(a.balance)}</TableCell>
                       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                        <Tooltip title="Edit Bank Account / Debit">
-                          <IconButton size="small" color="primary" onClick={() => { setEditingBankAccount(a); setActiveModal('add-bank-account'); }}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete Bank Account">
-                          <IconButton size="small" color="error" onClick={() => { setDeleteTarget(a); setDeleteType('bank'); }}>
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                          <Tooltip title="Edit Bank Account / Debit">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                color: '#38bdf8',
+                                background: 'rgba(56, 189, 248, 0.15)',
+                                border: '1px solid rgba(56, 189, 248, 0.3)',
+                                '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                              }}
+                              onClick={() => { setEditingBankAccount(a); setActiveModal('add-bank-account'); }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Bank Account">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                color: '#ef4444',
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                              }}
+                              onClick={() => { setDeleteTarget(a); setDeleteType('bank'); }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -394,16 +454,36 @@ const DashboardView = () => {
                           {itemPnL >= 0 ? '+' : ''}{formatCurrency(itemPnL)} ({itemRoi.toFixed(1)}%)
                         </TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                          <Tooltip title="Edit Trade / Asset">
-                            <IconButton size="small" color="primary" onClick={() => { setEditingTrade(inv); setActiveModal('add-trade'); }}>
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete Trade / Asset">
-                            <IconButton size="small" color="error" onClick={() => { setDeleteTarget(inv); setDeleteType('trade'); }}>
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                            <Tooltip title="Edit Trade / Asset">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#38bdf8',
+                                  background: 'rgba(56, 189, 248, 0.15)',
+                                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                                  '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                                }}
+                                onClick={() => { setEditingTrade(inv); setActiveModal('add-trade'); }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Trade / Asset">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: '#ef4444',
+                                  background: 'rgba(239, 68, 68, 0.15)',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                                  '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                                }}
+                                onClick={() => { setDeleteTarget(inv); setDeleteType('trade'); }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     );

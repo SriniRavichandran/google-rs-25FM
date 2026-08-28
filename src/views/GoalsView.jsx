@@ -97,14 +97,32 @@ const GoalsView = () => {
                       <Chip label={`#${idx + 1}`} size="small" sx={{ fontWeight: 800, fontSize: '0.72rem', height: 22, background: 'rgba(255,255,255,0.08)' }} />
                       <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1rem' }}>{g.title}</Typography>
                     </Box>
-                    <Box>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
                       <Tooltip title="Edit Goal">
-                        <IconButton size="small" color="primary" onClick={() => { setEditingGoal(g); setActiveModal('add-goal'); }}>
+                        <IconButton
+                          size="small"
+                          sx={{
+                            color: '#38bdf8',
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
+                          }}
+                          onClick={() => { setEditingGoal(g); setActiveModal('add-goal'); }}
+                        >
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete Goal">
-                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(g)}>
+                        <IconButton
+                          size="small"
+                          sx={{
+                            color: '#ef4444',
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                          }}
+                          onClick={() => setDeleteTarget(g)}
+                        >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
