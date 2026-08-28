@@ -211,23 +211,30 @@ const BankAccountsView = () => {
                         <TableCell sx={{ fontWeight: 700, color: '#10b981', whiteSpace: 'nowrap' }}>{formatCurrency(a.balance)}</TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-                            <Tooltip title="Edit Bank Account / Debit">
-                              <IconButton
-                                size="small"
-                                sx={{
-                                  color: '#38bdf8',
-                                  background: 'rgba(56, 189, 248, 0.15)',
-                                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                                  '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
-                                }}
-                                onClick={() => {
-                                  setEditingBankAccount(a);
-                                  setActiveModal('add-bank-account');
-                                }}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<EditIcon fontSize="small" />}
+                              onClick={() => {
+                                setEditingBankAccount(a);
+                                setActiveModal('add-bank-account');
+                              }}
+                              sx={{
+                                color: '#38bdf8',
+                                borderColor: 'rgba(56, 189, 248, 0.5)',
+                                background: 'rgba(56, 189, 248, 0.1)',
+                                '&:hover': {
+                                  borderColor: '#38bdf8',
+                                  background: 'rgba(56, 189, 248, 0.25)'
+                                },
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                px: 1.2,
+                                py: 0.3
+                              }}
+                            >
+                              Edit
+                            </Button>
                             <Tooltip title="Delete Bank Account">
                               <IconButton
                                 size="small"
@@ -235,7 +242,7 @@ const BankAccountsView = () => {
                                   color: '#ef4444',
                                   background: 'rgba(239, 68, 68, 0.15)',
                                   border: '1px solid rgba(239, 68, 68, 0.3)',
-                                  '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                                  '&:hover': { background: 'rgba(239, 68, 68, 0.25)' }
                                 }}
                                 onClick={() => setDeleteTarget(a)}
                               >

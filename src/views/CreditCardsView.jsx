@@ -246,23 +246,30 @@ const CreditCardsView = () => {
                           <TableCell sx={{ whiteSpace: 'nowrap' }}>Day {c.dueDate}</TableCell>
                           <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-                              <Tooltip title="Edit Credit Card">
-                                <IconButton
-                                  size="small"
-                                  sx={{
-                                    color: '#38bdf8',
-                                    background: 'rgba(56, 189, 248, 0.15)',
-                                    border: '1px solid rgba(56, 189, 248, 0.3)',
-                                    '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
-                                  }}
-                                  onClick={() => {
-                                    setEditingCreditCard(c);
-                                    setActiveModal('add-credit-card');
-                                  }}
-                                >
-                                  <EditIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<EditIcon fontSize="small" />}
+                                onClick={() => {
+                                  setEditingCreditCard(c);
+                                  setActiveModal('add-credit-card');
+                                }}
+                                sx={{
+                                  color: '#38bdf8',
+                                  borderColor: 'rgba(56, 189, 248, 0.5)',
+                                  background: 'rgba(56, 189, 248, 0.1)',
+                                  '&:hover': {
+                                    borderColor: '#38bdf8',
+                                    background: 'rgba(56, 189, 248, 0.25)'
+                                  },
+                                  fontWeight: 700,
+                                  textTransform: 'none',
+                                  px: 1.2,
+                                  py: 0.3
+                                }}
+                              >
+                                Edit
+                              </Button>
                               <Tooltip title="Delete Credit Card">
                                 <IconButton
                                   size="small"
@@ -270,7 +277,7 @@ const CreditCardsView = () => {
                                     color: '#ef4444',
                                     background: 'rgba(239, 68, 68, 0.15)',
                                     border: '1px solid rgba(239, 68, 68, 0.3)',
-                                    '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                                    '&:hover': { background: 'rgba(239, 68, 68, 0.25)' }
                                   }}
                                   onClick={() => setDeleteTarget(c)}
                                 >
