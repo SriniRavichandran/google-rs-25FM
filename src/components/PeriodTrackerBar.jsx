@@ -27,22 +27,34 @@ const PeriodTrackerBar = () => {
     <Box
       sx={{
         py: 1,
-        px: 3,
+        px: { xs: 1.5, sm: 3 },
         background: 'rgba(11, 7, 9, 0.65)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        ml: { sm: '280px' },
+        ml: { md: '280px', xs: 0 },
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        width: { md: 'calc(100% - 280px)', xs: '100%' }
       }}
     >
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
-        Tracking Period:
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, whiteSpace: 'nowrap' }}>
+        Period:
       </Typography>
 
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.75,
+          overflowX: 'auto',
+          maxWidth: '100%',
+          py: 0.5,
+          '&::-webkit-scrollbar': { height: 4 },
+          '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.15)', borderRadius: 2 }
+        }}
+      >
         {periods.map((p) => {
           const isActive = selectedPeriod === p.id;
           return (
@@ -55,9 +67,10 @@ const PeriodTrackerBar = () => {
               onClick={() => setSelectedPeriod(p.id)}
               sx={{
                 borderRadius: 3,
-                fontSize: '0.78rem',
+                fontSize: '0.75rem',
                 py: 0.4,
-                px: 1.5,
+                px: 1.2,
+                whiteSpace: 'nowrap',
                 fontWeight: isActive ? 700 : 500,
                 borderColor: isActive ? 'primary.main' : 'rgba(255,255,255,0.15)',
                 background: isActive ? undefined : 'rgba(255,255,255,0.03)',
@@ -71,18 +84,18 @@ const PeriodTrackerBar = () => {
             </Button>
           );
         })}
-      </Stack>
+      </Box>
 
       {selectedPeriod === 'custom' && (
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ml: { sm: 1 } }}>
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, ml: { sm: 1 }, flexWrap: 'wrap' }}>
           <TextField
             size="small"
             type="date"
             value={customStartDate}
             onChange={(e) => setCustomStartDate(e.target.value)}
             sx={{
-              width: 140,
-              '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: '0.78rem' },
+              width: 130,
+              '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: '0.75rem' },
               '& .MuiOutlinedInput-root': { borderRadius: 2, background: 'rgba(255,255,255,0.05)' }
             }}
           />
@@ -93,8 +106,8 @@ const PeriodTrackerBar = () => {
             value={customEndDate}
             onChange={(e) => setCustomEndDate(e.target.value)}
             sx={{
-              width: 140,
-              '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: '0.78rem' },
+              width: 130,
+              '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: '0.75rem' },
               '& .MuiOutlinedInput-root': { borderRadius: 2, background: 'rgba(255,255,255,0.05)' }
             }}
           />

@@ -16,7 +16,7 @@ const InvestmentsView = () => {
     totalInvested,
     totalPortfolioValue,
     setActiveModal,
-    deleteTransaction,
+    deleteTrade,
     setEditingTrade
   } = useFinance();
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -28,35 +28,35 @@ const InvestmentsView = () => {
   const overallRoi = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>📈 Investments, Stocks & Assets</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>📈 Investments, Stocks & Assets</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>Track equity portfolios, mutual funds, crypto, buy prices, and unrealized P&L</Typography>
         </Box>
         <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => { setEditingTrade(null); setActiveModal('add-trade'); }}>
-          + Log Trade / Asset
+          Log Trade / Asset
         </Button>
       </Box>
 
       {/* Metrics */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card><CardContent>
+          <Card sx={{ height: '100%' }}><CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Invested Capital</Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', my: 0.5 }}>{formatCurrency(totalInvested)}</Typography>
             <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 600 }}>Principal Capital</Typography>
           </CardContent></Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card><CardContent>
+          <Card sx={{ height: '100%' }}><CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Portfolio Value</Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5 }}>{formatCurrency(totalPortfolioValue)}</Typography>
             <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>Market Value</Typography>
           </CardContent></Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card><CardContent>
+          <Card sx={{ height: '100%' }}><CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Unrealized P&L</Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, color: totalPnL >= 0 ? '#10b981' : '#ef4444', my: 0.5 }}>
               {totalPnL >= 0 ? '+' : ''}{formatCurrency(totalPnL)}
@@ -67,7 +67,7 @@ const InvestmentsView = () => {
           </CardContent></Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card><CardContent>
+          <Card sx={{ height: '100%' }}><CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Tracked Positions</Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, color: '#a855f7', my: 0.5 }}>{data.investments.length}</Typography>
             <Typography variant="caption" sx={{ color: '#a855f7', fontWeight: 600 }}>Active Assets</Typography>
@@ -76,47 +76,49 @@ const InvestmentsView = () => {
       </Grid>
 
       {/* Portfolio Table */}
-      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>📈 Portfolio Holdings & Asset Performance</Typography>
-      <Card>
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>📈 Portfolio Holdings & Asset Performance</Typography>
+      <Card sx={{ width: '100%', overflow: 'hidden' }}>
         <CardContent sx={{ p: 0 }}>
-          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
-            <Table>
+          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent', width: '100%', overflowX: 'auto' }}>
+            <Table sx={{ minWidth: 750 }}>
               <TableHead>
                 <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Asset Name</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Qty</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Buy Price</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Current Price</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Invested Amount</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Current Value</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>P&L</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Asset Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Type</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Qty</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Buy Price</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Current Price</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Invested Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Current Value</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>P&L</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {data.investments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                      No trade positions logged yet. Click <strong>"+ Log Trade / Asset"</strong> to add!
+                    <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                      No trade positions logged yet. Click <strong>"Log Trade / Asset"</strong> to add!
                     </TableCell>
                   </TableRow>
-                ) : data.investments.map((inv) => {
+                ) : data.investments.map((inv, idx) => {
                   const itemPnL = inv.currentValue - inv.investedAmount;
                   const itemRoi = inv.investedAmount > 0 ? (itemPnL / inv.investedAmount) * 100 : 0;
                   return (
                     <TableRow key={inv.id} hover>
-                      <TableCell><strong>{inv.name}</strong></TableCell>
-                      <TableCell><Chip label={inv.type} size="small" color="primary" sx={{ fontWeight: 700 }} /></TableCell>
-                      <TableCell>{inv.quantity}</TableCell>
-                      <TableCell>{formatCurrency(inv.buyPrice)}</TableCell>
-                      <TableCell>{formatCurrency(inv.currentPrice)}</TableCell>
-                      <TableCell>{formatCurrency(inv.investedAmount)}</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>{formatCurrency(inv.currentValue)}</TableCell>
-                      <TableCell sx={{ fontWeight: 800, color: itemPnL >= 0 ? '#10b981' : '#ef4444' }}>
+                      <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{inv.name}</strong></TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}><Chip label={inv.type} size="small" color="primary" sx={{ fontWeight: 700 }} /></TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{inv.quantity}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(inv.buyPrice)}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(inv.currentPrice)}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(inv.investedAmount)}</TableCell>
+                      <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{formatCurrency(inv.currentValue)}</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: itemPnL >= 0 ? '#10b981' : '#ef4444', whiteSpace: 'nowrap' }}>
                         {itemPnL >= 0 ? '+' : ''}{formatCurrency(itemPnL)} ({itemRoi.toFixed(1)}%)
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                         <Tooltip title="Edit Trade">
                           <IconButton
                             size="small"
@@ -147,7 +149,7 @@ const InvestmentsView = () => {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && deleteTransaction(deleteTarget.id)}
+        onConfirm={() => deleteTarget && deleteTrade(deleteTarget.id)}
         label={deleteTarget ? `trade position "${deleteTarget.name}"` : ''}
       />
     </Box>

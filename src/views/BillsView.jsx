@@ -79,11 +79,11 @@ const BillsView = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
             🔄 Bills & Subscriptions Tracker
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -94,18 +94,21 @@ const BillsView = () => {
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
-          onClick={() => setActiveModal('add-bill')}
+          onClick={() => {
+            setEditingBill(null);
+            setActiveModal('add-bill');
+          }}
           sx={{ background: 'linear-gradient(135deg, #38bdf8, #0284c7)', fontWeight: 700 }}
         >
-          + Add Bill / Subscription
+          Add Bill / Subscription
         </Button>
       </Box>
 
       {/* Metrics Row */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
                 Active Subscriptions Cost
               </Typography>
@@ -120,8 +123,8 @@ const BillsView = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
                 Total Tracked Services
               </Typography>
@@ -136,8 +139,8 @@ const BillsView = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
                 Expiring Soon (≤ 7 Days)
               </Typography>
@@ -152,8 +155,8 @@ const BillsView = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
                 Expired / Inactive
               </Typography>
@@ -169,66 +172,70 @@ const BillsView = () => {
       </Grid>
 
       {/* Subscriptions Table */}
-      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
         📋 Active Subscriptions & Validity Cycles
       </Typography>
 
-      <Card>
+      <Card sx={{ width: '100%', overflow: 'hidden' }}>
         <CardContent sx={{ p: 0 }}>
-          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
-            <Table>
+          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent', width: '100%', overflowX: 'auto' }}>
+            <Table sx={{ minWidth: 700 }}>
               <TableHead>
                 <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Service / Bill Name</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Start Date</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>End Date / Renewal</TableCell>
-                  <TableCell sx={{ fontWeight: 700, minWidth: 160 }}>Cycle & Validity</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Service / Bill Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Category</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Start Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>End Date / Renewal</TableCell>
+                  <TableCell sx={{ fontWeight: 700, minWidth: 150, whiteSpace: 'nowrap' }}>Cycle & Validity</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {billsWithMetrics.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 5, color: 'text.secondary' }}>
-                      No subscriptions or bills added yet. Click <strong>"+ Add Bill / Subscription"</strong> to start tracking!
+                    <TableCell colSpan={9} align="center" sx={{ py: 5, color: 'text.secondary' }}>
+                      No subscriptions or bills added yet. Click <strong>"Add Bill / Subscription"</strong> to start tracking!
                     </TableCell>
                   </TableRow>
                 ) : (
-                  billsWithMetrics.map((b) => {
+                  billsWithMetrics.map((b, idx) => {
                     const color = getStatusColor(b.status, b.isExpired, b.isDueSoon);
                     return (
                       <TableRow key={b.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                        <TableCell>
+                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>
+                          {idx + 1}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
                           <Typography variant="body2" sx={{ fontWeight: 700 }}>
                             {b.name}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
                           <Chip label={b.category} size="small" variant="outlined" sx={{ fontWeight: 600, fontSize: '0.75rem' }} />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 800, color: '#38bdf8', fontFamily: 'JetBrains Mono' }}>
+                        <TableCell sx={{ fontWeight: 800, color: '#38bdf8', fontFamily: 'JetBrains Mono', whiteSpace: 'nowrap' }}>
                           {formatCurrency(b.amount)}
                         </TableCell>
-                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                           {b.startDate || '—'}
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                           {b.endDate || '—'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ minWidth: 150 }}>
                           <Box sx={{ width: '100%' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
                                 {b.isExpired
                                   ? `Expired ${Math.abs(b.daysRemaining)}d ago`
                                   : b.daysRemaining === 0
                                   ? 'Renews Today'
                                   : `${b.daysRemaining} days left`}
                               </Typography>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
                                 {b.totalDays}d cycle
                               </Typography>
                             </Box>
@@ -240,7 +247,7 @@ const BillsView = () => {
                             />
                           </Box>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
                           <Chip
                             label={b.isExpired ? 'EXPIRED' : b.status}
                             size="small"
@@ -248,7 +255,7 @@ const BillsView = () => {
                             sx={{ fontWeight: 700, fontSize: '0.75rem' }}
                           />
                         </TableCell>
-                        <TableCell align="right">
+                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                           <Tooltip title="Edit Subscription">
                             <IconButton
                               size="small"

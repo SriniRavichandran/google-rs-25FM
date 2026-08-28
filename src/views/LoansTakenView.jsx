@@ -24,7 +24,7 @@ import DeleteConfirmDialog from '../components/DeleteConfirmDialog.jsx';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const LoansTakenView = () => {
-  const { data, totalLoansTaken, setActiveModal, deleteTransaction, setEditingLoanTaken } = useFinance();
+  const { data, totalLoansTaken, setActiveModal, deleteLoanTaken, setEditingLoanTaken } = useFinance();
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
@@ -33,26 +33,26 @@ const LoansTakenView = () => {
   const totalRepaid = data.loansTaken.reduce((s, l) => s + (parseFloat(l.amountRepaid) || 0), 0);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, mb: 3 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
             💸 Loans Taken & Borrowed Liabilities
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Track personal loans, bank loans, money borrowed from others, interest rates, and payoff progress
           </Typography>
         </Box>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => setActiveModal('add-loan-taken')}>
-          + Add Loan Taken
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={() => { setEditingLoanTaken(null); setActiveModal('add-loan-taken'); }}>
+          Add Loan Taken
         </Button>
       </Box>
 
       {/* Metrics Row */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Borrowed Principal</Typography>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#ef4444', my: 0.5 }}>{formatCurrency(totalPrincipal)}</Typography>
               <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600 }}>Total Debt Incurred</Typography>
@@ -60,8 +60,8 @@ const LoansTakenView = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Outstanding Debt Remaining</Typography>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#ef4444', my: 0.5 }}>{formatCurrency(totalLoansTaken)}</Typography>
               <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600 }}>{data.loansTaken.length} Active Debts</Typography>
@@ -69,8 +69,8 @@ const LoansTakenView = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Total Debt Repaid</Typography>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5 }}>{formatCurrency(totalRepaid)}</Typography>
               <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>Paid Off Funds</Typography>
@@ -78,8 +78,8 @@ const LoansTakenView = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>Payoff Progress %</Typography>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5 }}>{totalPrincipal > 0 ? ((totalRepaid / totalPrincipal) * 100).toFixed(1) : '0.0'}%</Typography>
               <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>Debt Repayment</Typography>
@@ -89,46 +89,48 @@ const LoansTakenView = () => {
       </Grid>
 
       {/* Table */}
-      <Card>
+      <Card sx={{ width: '100%', overflow: 'hidden' }}>
         <CardContent sx={{ p: 0 }}>
-          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent' }}>
-            <Table>
+          <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent', width: '100%', overflowX: 'auto' }}>
+            <Table sx={{ minWidth: 700 }}>
               <TableHead>
                 <TableRow sx={{ background: 'rgba(255,255,255,0.03)' }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Lender / Bank Name</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Amount Borrowed</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Interest Rate (%)</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Date Taken</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Amount Repaid</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Outstanding Debt</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Lender / Bank Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Amount Borrowed</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Interest Rate (%)</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Date Taken</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Due Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Amount Repaid</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Outstanding Debt</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {data.loansTaken.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                      No borrowed loans recorded. Click <strong>"+ Add Loan Taken"</strong> to track liabilities!
+                    <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                      No borrowed loans recorded. Click <strong>"Add Loan Taken"</strong> to track liabilities!
                     </TableCell>
                   </TableRow>
-                ) : data.loansTaken.map((l) => {
+                ) : data.loansTaken.map((l, idx) => {
                   const outstanding = parseFloat(l.outstandingBalance) || (parseFloat(l.amountTaken) - (parseFloat(l.amountRepaid) || 0));
                   const isPaid = outstanding <= 0;
                   return (
                     <TableRow key={l.id} hover>
-                      <TableCell><strong>{l.lenderName}</strong></TableCell>
-                      <TableCell>{formatCurrency(l.amountTaken)}</TableCell>
-                      <TableCell>{l.interestRate || 0}%</TableCell>
-                      <TableCell>{l.dateTaken}</TableCell>
-                      <TableCell>{l.dueDate || 'No Due Date'}</TableCell>
-                      <TableCell sx={{ color: '#10b981' }}>{formatCurrency(l.amountRepaid || 0)}</TableCell>
-                      <TableCell sx={{ fontWeight: 800, color: isPaid ? '#10b981' : '#ef4444' }}>{formatCurrency(outstanding)}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>{idx + 1}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}><strong>{l.lenderName}</strong></TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatCurrency(l.amountTaken)}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{l.interestRate || 0}%</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{l.dateTaken}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{l.dueDate || 'No Due Date'}</TableCell>
+                      <TableCell sx={{ color: '#10b981', whiteSpace: 'nowrap' }}>{formatCurrency(l.amountRepaid || 0)}</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: isPaid ? '#10b981' : '#ef4444', whiteSpace: 'nowrap' }}>{formatCurrency(outstanding)}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
                         <Chip label={isPaid ? 'PAID OFF' : 'ACTIVE DEBT'} size="small" color={isPaid ? 'success' : 'error'} sx={{ fontWeight: 700 }} />
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                         <Tooltip title="Edit Loan">
                           <IconButton size="small" color="primary" onClick={() => { setEditingLoanTaken(l); setActiveModal('add-loan-taken'); }}>
                             <EditIcon fontSize="small" />
@@ -152,7 +154,7 @@ const LoansTakenView = () => {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && deleteTransaction(deleteTarget.id)}
+        onConfirm={() => deleteTarget && deleteLoanTaken(deleteTarget.id)}
         label={deleteTarget ? `loan taken from "${deleteTarget.lenderName}"` : ''}
       />
     </Box>

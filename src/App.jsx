@@ -35,6 +35,11 @@ import AddReviewModal from './components/Modals/AddReviewModal.jsx';
 const MainAppContent = () => {
   const { currentView, theme } = useFinance();
   const muiTheme = getMuiTheme(theme);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(prev => !prev);
+  };
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -58,10 +63,10 @@ const MainAppContent = () => {
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar />
-        <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', overflowX: 'hidden' }}>
-          <TopHeader />
+      <Box sx={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden' }}>
+        <Sidebar mobileOpen={mobileOpen} onClose={handleDrawerToggle} />
+        <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', width: '100%', overflowX: 'hidden' }}>
+          <TopHeader onMobileNavToggle={handleDrawerToggle} />
           <PeriodTrackerBar />
           {renderCurrentView()}
         </Box>

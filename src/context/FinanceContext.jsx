@@ -507,51 +507,41 @@ export const FinanceProvider = ({ children }) => {
     }));
   };
 
-  // Universal deleteTransaction — searches across ALL data arrays by id
+  // Dedicated Delete Handlers
   const deleteTransaction = (id) => {
-    // Check transactions (Sheet1)
     const tx = data.transactions.find(t => t.id === id);
-    if (tx) {
-      if (tx.sheetRowIndex) deleteRowInSheet('Sheet1', tx.sheetRowIndex);
-      setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
-      return;
-    }
-    // Check credit cards (Credit tab)
+    if (tx && tx.sheetRowIndex) deleteRowInSheet('Sheet1', tx.sheetRowIndex);
+    setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+  };
+
+  const deleteCreditCard = (id) => {
     const card = data.creditCards.find(c => c.id === id);
-    if (card) {
-      if (card.sheetRowIndex) deleteRowInSheet('Credit', card.sheetRowIndex);
-      setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
-      return;
-    }
-    // Check bank accounts (Debit tab)
+    if (card && card.sheetRowIndex) deleteRowInSheet('Credit', card.sheetRowIndex);
+    setData(prev => ({ ...prev, creditCards: prev.creditCards.filter(c => c.id !== id) }));
+  };
+
+  const deleteBankAccount = (id) => {
     const bank = data.bankAccounts.find(b => b.id === id);
-    if (bank) {
-      if (bank.sheetRowIndex) deleteRowInSheet('Debit', bank.sheetRowIndex);
-      setData(prev => ({ ...prev, bankAccounts: prev.bankAccounts.filter(b => b.id !== id) }));
-      return;
-    }
-    // Check investments (Trade tab)
+    if (bank && bank.sheetRowIndex) deleteRowInSheet('Debit', bank.sheetRowIndex);
+    setData(prev => ({ ...prev, bankAccounts: prev.bankAccounts.filter(b => b.id !== id) }));
+  };
+
+  const deleteTrade = (id) => {
     const inv = data.investments.find(i => i.id === id);
-    if (inv) {
-      if (inv.sheetRowIndex) deleteRowInSheet('Trade', inv.sheetRowIndex);
-      setData(prev => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
-      return;
-    }
-    // Check loans given (Given_Loan tab)
+    if (inv && inv.sheetRowIndex) deleteRowInSheet('Trade', inv.sheetRowIndex);
+    setData(prev => ({ ...prev, investments: prev.investments.filter(i => i.id !== id) }));
+  };
+
+  const deleteLoanGiven = (id) => {
     const given = data.loansGiven.find(l => l.id === id);
-    if (given) {
-      if (given.sheetRowIndex) deleteRowInSheet('Given_Loan', given.sheetRowIndex);
-      setData(prev => ({ ...prev, loansGiven: prev.loansGiven.filter(l => l.id !== id) }));
-      return;
-    }
-    // Check loans taken (Taken_Loan tab)
+    if (given && given.sheetRowIndex) deleteRowInSheet('Given_Loan', given.sheetRowIndex);
+    setData(prev => ({ ...prev, loansGiven: prev.loansGiven.filter(l => l.id !== id) }));
+  };
+
+  const deleteLoanTaken = (id) => {
     const taken = data.loansTaken.find(l => l.id === id);
-    if (taken) {
-      if (taken.sheetRowIndex) deleteRowInSheet('Taken_Loan', taken.sheetRowIndex);
-      setData(prev => ({ ...prev, loansTaken: prev.loansTaken.filter(l => l.id !== id) }));
-      return;
-    }
-    console.warn('deleteTransaction: id not found in any data array:', id);
+    if (taken && taken.sheetRowIndex) deleteRowInSheet('Taken_Loan', taken.sheetRowIndex);
+    setData(prev => ({ ...prev, loansTaken: prev.loansTaken.filter(l => l.id !== id) }));
   };
 
   const addCreditCard = (card) => {
@@ -793,11 +783,11 @@ export const FinanceProvider = ({ children }) => {
       creditUtil,
       filteredTx,
       addTransaction, editTransaction, deleteTransaction,
-      addCreditCard, editCreditCard,
-      addBankAccount, editBankAccount,
-      addTrade, editTrade,
-      addLoanGiven, editLoanGiven,
-      addLoanTaken, editLoanTaken,
+      addCreditCard, editCreditCard, deleteCreditCard,
+      addBankAccount, editBankAccount, deleteBankAccount,
+      addTrade, editTrade, deleteTrade,
+      addLoanGiven, editLoanGiven, deleteLoanGiven,
+      addLoanTaken, editLoanTaken, deleteLoanTaken,
       addBudget, editBudget, deleteBudget,
       addBill, editBill, deleteBill,
       addGoal, editGoal, deleteGoal,

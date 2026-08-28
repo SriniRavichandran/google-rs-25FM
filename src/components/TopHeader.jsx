@@ -16,9 +16,10 @@ import AddIcon from '@mui/icons-material/Add';
 import LockIcon from '@mui/icons-material/Lock';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SyncIcon from '@mui/icons-material/Sync';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useFinance } from '../context/FinanceContext.jsx';
 
-const TopHeader = () => {
+const TopHeader = ({ onMobileNavToggle }) => {
   const {
     currentView,
     theme,
@@ -54,18 +55,37 @@ const TopHeader = () => {
         background: 'rgba(11, 7, 9, 0.9)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        ml: { sm: '280px' },
-        width: { sm: 'calc(100% - 280px)' },
+        ml: { md: '280px', xs: 0 },
+        width: { md: 'calc(100% - 280px)', xs: '100%' },
         zIndex: 1100
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', py: 0.5, px: 2, minHeight: '56px !important', flexWrap: 'nowrap', gap: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          {titleMap[currentView] || 'RS-25F MIND'}
-        </Typography>
+      <Toolbar sx={{ justifyContent: 'space-between', py: 0.5, px: { xs: 1.5, sm: 2 }, minHeight: '56px !important', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={onMobileNavToggle}
+            sx={{ mr: 1, display: { md: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '0.95rem', sm: '1.25rem' },
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {titleMap[currentView] || 'RS-25F MIND'}
+          </Typography>
+        </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'nowrap' }}>
-
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 }, flexShrink: 0 }}>
           {/* Theme Selector */}
           <Select
             size="small"
@@ -75,9 +95,10 @@ const TopHeader = () => {
               borderRadius: 3,
               fontSize: '0.78rem',
               height: 34,
+              maxWidth: { xs: 100, sm: 130 },
               background: 'rgba(255,255,255,0.05)',
               '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
-              '& .MuiSelect-select': { py: 0.6 }
+              '& .MuiSelect-select': { py: 0.6, px: 1 }
             }}
           >
             <MenuItem value="relentless">🔥 Crimson</MenuItem>
@@ -118,23 +139,41 @@ const TopHeader = () => {
               size="small"
               startIcon={<LockIcon />}
               onClick={handleGoogleLogin}
-              sx={{ borderRadius: 2, whiteSpace: 'nowrap', fontSize: '0.78rem', height: 34 }}
+              sx={{ borderRadius: 2, whiteSpace: 'nowrap', fontSize: '0.78rem', height: 34, px: { xs: 1, sm: 1.5 } }}
             >
               Sign In
             </Button>
           ) : (
             <Tooltip title="Sign Out of Google">
-              <Button
-                variant="outlined"
+              <IconButton
                 color="error"
                 size="small"
-                startIcon={<LogoutIcon />}
                 onClick={handleGoogleLogout}
-                sx={{ borderRadius: 2, whiteSpace: 'nowrap', fontSize: '0.78rem', height: 34, borderColor: 'rgba(239,68,68,0.5)' }}
+                sx={{ border: '1px solid rgba(239,68,68,0.5)', borderRadius: 2, display: { xs: 'flex', sm: 'none' } }}
               >
-                Sign Out
-              </Button>
+                <LogoutIcon fontSize="small" />
+              </IconButton>
             </Tooltip>
+          )}
+
+          {isAuthenticated && (
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<LogoutIcon />}
+              onClick={handleGoogleLogout}
+              sx={{
+                borderRadius: 2,
+                whiteSpace: 'nowrap',
+                fontSize: '0.78rem',
+                height: 34,
+                borderColor: 'rgba(239,68,68,0.5)',
+                display: { xs: 'none', sm: 'inline-flex' }
+              }}
+            >
+              Sign Out
+            </Button>
           )}
 
           {/* Add Row Button */}
@@ -148,12 +187,13 @@ const TopHeader = () => {
               whiteSpace: 'nowrap',
               fontSize: '0.78rem',
               height: 34,
+              px: { xs: 1, sm: 1.5 },
               background: 'linear-gradient(135deg, #10b981, #059669)',
               boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
               flexShrink: 0
             }}
           >
-            + Add Row
+            Add Row
           </Button>
         </Box>
       </Toolbar>

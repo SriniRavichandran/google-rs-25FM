@@ -24,9 +24,9 @@ const NetWorthView = () => {
   const totalLiabilities = totalCreditOutstanding + totalLoansTaken;
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           📊 Net-Worth & Wealth Breakdown
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -40,10 +40,10 @@ const NetWorthView = () => {
           <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 800, letterSpacing: 2 }}>
             TOTAL NET WORTH
           </Typography>
-          <Typography variant="h3" sx={{ fontWeight: 900, color: '#10b981', my: 1, fontFamily: 'JetBrains Mono' }}>
+          <Typography variant="h3" sx={{ fontWeight: 900, color: '#10b981', my: 1, fontFamily: 'JetBrains Mono', fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } }}>
             {formatCurrency(netWorth)}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
             Assets ({formatCurrency(totalAssets)}) - Liabilities ({formatCurrency(totalLiabilities)})
           </Typography>
         </CardContent>
@@ -52,13 +52,13 @@ const NetWorthView = () => {
       <Grid container spacing={3}>
         {/* Assets Section */}
         <Grid item xs={12} md={6}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#10b981', mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#10b981', mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             🟢 Total Assets ({formatCurrency(totalAssets)})
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <Card>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Liquid Cash & Bank Reserves</Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Savings & Debit Card Balances</Typography>
@@ -69,7 +69,7 @@ const NetWorthView = () => {
             </Grid>
             <Grid item xs={12}>
               <Card>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Trade & Investment Portfolio</Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Equity, Mutual Funds & Crypto</Typography>
@@ -80,7 +80,7 @@ const NetWorthView = () => {
             </Grid>
             <Grid item xs={12}>
               <Card>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Loans Given (Money Owed to Me)</Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Lent Capital Assets</Typography>
@@ -94,13 +94,13 @@ const NetWorthView = () => {
 
         {/* Liabilities Section */}
         <Grid item xs={12} md={6}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#ef4444', mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#ef4444', mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             🔴 Total Liabilities ({formatCurrency(totalLiabilities)})
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <Card>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Credit Card Outstanding Dues</Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Unpaid Card Statements</Typography>
@@ -111,7 +111,7 @@ const NetWorthView = () => {
             </Grid>
             <Grid item xs={12}>
               <Card>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1 }}>
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Loans Taken (Borrowed Debt)</Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Personal & Bank Debt</Typography>

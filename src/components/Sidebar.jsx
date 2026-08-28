@@ -27,8 +27,15 @@ import { useFinance } from '../context/FinanceContext.jsx';
 
 const drawerWidth = 280;
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, onClose }) => {
   const { currentView, setCurrentView, isAuthenticated, handleGoogleLogin } = useFinance();
+
+  const handleNavClick = (id) => {
+    setCurrentView(id);
+    if (onClose) {
+      onClose();
+    }
+  };
 
   const coreNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon color="primary" /> },
@@ -48,21 +55,8 @@ const Sidebar = () => {
     { id: 'net-worth', label: 'Net-Worth Tracker', icon: <ShowChartIcon style={{ color: '#10b981' }} /> },
   ];
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          background: 'rgba(11, 7, 9, 0.92)',
-          backdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)'
-        },
-      }}
-    >
+  const drawerContent = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Sidebar Header Brand Logo */}
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <img src="logo.png" alt="RS-25F MIND Logo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
@@ -87,7 +81,7 @@ const Sidebar = () => {
             <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
                 selected={currentView === item.id}
-                onClick={() => setCurrentView(item.id)}
+                onClick={() => handleNavClick(item.id)}
                 sx={{
                   borderRadius: 3,
                   '&.Mui-selected': {
@@ -113,7 +107,7 @@ const Sidebar = () => {
             <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
                 selected={currentView === item.id}
-                onClick={() => setCurrentView(item.id)}
+                onClick={() => handleNavClick(item.id)}
                 sx={{
                   borderRadius: 3,
                   '&.Mui-selected': {
@@ -146,7 +140,49 @@ const Sidebar = () => {
           </Button>
         )}
       </Box>
-    </Drawer>
+    </Box>
+  );
+
+  return (
+    <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
+      {/* Mobile temporary drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            background: 'rgba(11, 7, 9, 0.96)',
+            backdropFilter: 'blur(20px)',
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+
+      {/* Desktop permanent drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            background: 'rgba(11, 7, 9, 0.92)',
+            backdropFilter: 'blur(20px)',
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+          },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
+    </Box>
   );
 };
 
