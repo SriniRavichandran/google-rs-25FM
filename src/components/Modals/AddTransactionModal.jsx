@@ -19,7 +19,7 @@ import { useFinance } from '../../context/FinanceContext.jsx';
 const AddTransactionModal = () => {
   const { activeModal, setActiveModal, editingTx, setEditingTx, addTransaction, editTransaction } = useFinance();
 
-  const [formData, setFormData] = useState({
+  const defaultForm = {
     type: 'expense',
     amount: '',
     date: new Date().toISOString().split('T')[0],
@@ -27,41 +27,53 @@ const AddTransactionModal = () => {
     paymentMethod: 'Credit Card',
     account: '',
     description: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(defaultForm);
 
   useEffect(() => {
     if (editingTx) {
       setFormData({
         type: editingTx.type || 'expense',
-        amount: editingTx.amount || '',
+        amount: editingTx.amount !== undefined ? editingTx.amount : '',
         date: editingTx.date || new Date().toISOString().split('T')[0],
         category: editingTx.category || 'Food & Dining',
         paymentMethod: editingTx.paymentMethod || 'Credit Card',
         account: editingTx.account || '',
         description: editingTx.description || ''
       });
+    } else {
+      setFormData(defaultForm);
     }
-  }, [editingTx]);
+  }, [editingTx, activeModal]);
+
+  if (activeModal !== 'add-transaction') return null;
 
   const handleClose = () => {
     setActiveModal(null);
     setEditingTx(null);
+    setFormData(defaultForm);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      amount: parseFloat(formData.amount) || 0
+    };
+
     if (editingTx) {
-      editTransaction(editingTx.id, formData);
+      editTransaction(editingTx.id, payload);
     } else {
-      addTransaction(formData);
+      addTransaction(payload);
     }
     handleClose();
   };
 
   return (
-    <Dialog open={activeModal === 'add-transaction'} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={true} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 800 }}>
-        {editingTx ? '✏️ Edit Row / Amount' : '➕ Add Row / Amount to Google Sheet'}
+        {editingTx ? '✏️ Edit Row / Transaction Amount' : '➕ Add Row / Amount to Google Sheet'}
         <IconButton onClick={handleClose} size="small">
           <CloseIcon />
         </IconButton>
@@ -89,11 +101,12 @@ const AddTransactionModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Amount (₹)"
+                label="Amount (₹) *"
                 type="number"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 required
+                inputProps={{ step: 'any' }}
               />
             </Grid>
 
@@ -101,7 +114,7 @@ const AddTransactionModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Date"
+                label="Date *"
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -114,7 +127,7 @@ const AddTransactionModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Category"
+                label="Category *"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 required
@@ -143,10 +156,10 @@ const AddTransactionModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Account / Card Used"
+                label="Account / Card Used *"
                 value={formData.account}
                 onChange={(e) => setFormData({ ...formData, account: e.target.value })}
-                placeholder="e.g. HDFC Regalia Gold"
+                placeholder="e.g. HDFC Regalia Gold, SBI Savings"
                 required
               />
             </Grid>
@@ -165,7 +178,9 @@ const AddTransactionModal = () => {
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={handleClose} color="inherit">Cancel</Button>
-          <Button type="submit" variant="contained" color="primary">Save to Sheet & App</Button>
+          <Button type="submit" variant="contained" color="primary">
+            {editingTx ? 'Update Transaction' : 'Save to Sheet & App'}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

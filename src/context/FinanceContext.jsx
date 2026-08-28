@@ -31,8 +31,24 @@ const SHEET_HEADER_CONFIG = {
 };
 
 export const FinanceProvider = ({ children }) => {
-  const [data, setData] = useState(INITIAL_DATA);
+  const [data, setData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rs25f_finance_data');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn("Failed to load data from localStorage", e);
+    }
+    return INITIAL_DATA;
+  });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rs25f_finance_data', JSON.stringify(data));
+    } catch (e) {
+      console.warn("Failed to save data to localStorage", e);
+    }
+  }, [data]);
 
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
   const [customStartDate, setCustomStartDate] = useState('');
