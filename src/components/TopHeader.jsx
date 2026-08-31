@@ -56,8 +56,8 @@ const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }
         background: 'rgba(11, 7, 9, 0.9)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        ml: desktopOpen ? { md: '280px', xs: 0 } : 0,
-        width: desktopOpen ? { md: 'calc(100% - 280px)', xs: '100%' } : '100%',
+        ml: { md: desktopOpen ? '280px' : '72px', xs: 0 },
+        width: { md: desktopOpen ? 'calc(100% - 280px)' : 'calc(100% - 72px)', xs: '100%' },
         transition: 'margin-left 0.3s ease, width 0.3s ease',
         zIndex: 1100
       }}
