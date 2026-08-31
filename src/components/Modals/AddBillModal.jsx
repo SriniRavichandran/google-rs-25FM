@@ -195,16 +195,19 @@ const AddBillModal = () => {
           background: 'rgba(10, 16, 28, 0.97)',
           border: '1px solid rgba(56, 189, 248, 0.3)',
           borderRadius: 3,
-          backdropFilter: 'blur(20px)'
+          backdropFilter: 'blur(20px)',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column'
         }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 800, pb: 1 }}>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 800, py: 1.5, px: { xs: 2, sm: 3 }, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <AutorenewIcon sx={{ color: '#38bdf8' }} />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
-              {editingBill ? '✏️ Edit Subscription / Bill' : '🔄 Add Bill / Subscription Tracker'}
+              {editingBill ? 'Edit Subscription / Bill' : 'Add Bill / Subscription Tracker'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               Configure Frequency (Day / Month / Year), Duration & Due Day
@@ -214,15 +217,27 @@ const AddBillModal = () => {
         <IconButton onClick={handleClose} size="small"><CloseIcon /></IconButton>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-          <Grid container spacing={2}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
+        <DialogContent
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            py: 2,
+            px: { xs: 2, sm: 3 },
+            '&::-webkit-scrollbar': { width: 6 },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(56, 189, 248, 0.3)',
+              borderRadius: 3
+            }
+          }}
+        >
+          <Grid container spacing={1.5}>
             {/* Bill Name */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 size="small"
-                label="Bill / Service Name *"
+                label="Bill / Service Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Netflix, Airtel OTT, Wifi Broadband, Gym, House Rent"
@@ -256,7 +271,7 @@ const AddBillModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Subscription Amount (₹) *"
+                label="Subscription Amount (₹)"
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -269,10 +284,10 @@ const AddBillModal = () => {
             {/* FREQUENCY UNIT & DURATION SELECTION */}
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth size="small">
-                <InputLabel>Frequency Unit *</InputLabel>
+                <InputLabel>Frequency Unit</InputLabel>
                 <Select
                   value={formData.periodUnit}
-                  label="Frequency Unit *"
+                  label="Frequency Unit"
                   onChange={(e) => handleUnitOrValueChange(e.target.value, formData.periodValue)}
                 >
                   <MenuItem value="DAYS">📅 Day(s)</MenuItem>
@@ -286,7 +301,7 @@ const AddBillModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label={`Duration Number (${formData.periodUnit}) *`}
+                label={`Duration (${formData.periodUnit})`}
                 type="number"
                 value={formData.periodValue}
                 onChange={(e) => handleUnitOrValueChange(formData.periodUnit, Math.max(1, parseInt(e.target.value, 10) || 1))}
@@ -371,7 +386,7 @@ const AddBillModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Start Date *"
+                label="Start Date"
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => handleStartDateChange(e.target.value)}
@@ -384,7 +399,7 @@ const AddBillModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="End Date / Next Renewal *"
+                label="End Date / Next Renewal"
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
@@ -413,8 +428,8 @@ const AddBillModal = () => {
             {/* Live Validity & Cost Breakdown Summary */}
             {validity && (
               <Grid item xs={12}>
-                <Box sx={{ p: 2, borderRadius: 2, background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
-                  <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 800, display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                <Box sx={{ p: 1.5, borderRadius: 2, background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+                  <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 800, display: 'block', mb: 0.8, letterSpacing: 0.5 }}>
                     SUBSCRIPTION DUES & COST BREAKDOWN
                   </Typography>
                   <Grid container spacing={1}>
@@ -460,7 +475,7 @@ const AddBillModal = () => {
             )}
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(10, 16, 28, 0.98)', gap: 1 }}>
           <Button onClick={handleClose} color="inherit">Cancel</Button>
           <Button
             type="submit"
