@@ -5,7 +5,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useFinance } from '../context/FinanceContext.jsx';
 
-const PeriodTrackerBar = () => {
+const PeriodTrackerBar = ({ desktopOpen = true }) => {
   const {
     selectedPeriod,
     setSelectedPeriod,
@@ -31,12 +31,12 @@ const PeriodTrackerBar = () => {
         background: 'rgba(11, 7, 9, 0.65)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        ml: { md: '280px', xs: 0 },
+        ml: 0,
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
         flexWrap: 'wrap',
-        width: { md: 'calc(100% - 280px)', xs: '100%' }
+        width: '100%'
       }}
     >
       <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, whiteSpace: 'nowrap' }}>

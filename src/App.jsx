@@ -80,9 +80,12 @@ const MainAppContent = () => {
           sx={{
             flexGrow: 1,
             minHeight: '100vh',
-            width: '100%',
+            minWidth: 0,
+            width: desktopOpen ? { md: 'calc(100vw - 280px)', xs: '100vw' } : { md: 'calc(100vw - 72px)', xs: '100vw' },
             overflowX: 'hidden',
-            transition: 'margin-left 0.3s ease, width 0.3s ease'
+            display: 'flex',
+            flexDirection: 'column',
+            transition: 'width 0.3s ease'
           }}
         >
           <TopHeader
@@ -90,8 +93,16 @@ const MainAppContent = () => {
             onDesktopNavToggle={handleDesktopToggle}
             desktopOpen={desktopOpen}
           />
-          <PeriodTrackerBar />
-          {renderCurrentView()}
+          <PeriodTrackerBar desktopOpen={desktopOpen} />
+          <Box
+            sx={{
+              flex: 1,
+              width: '100%',
+              p: { xs: 1.5, sm: 2.5, md: 3 }
+            }}
+          >
+            {renderCurrentView()}
+          </Box>
         </Box>
         <AddTransactionModal />
         <AddCreditCardModal />

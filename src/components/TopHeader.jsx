@@ -56,9 +56,8 @@ const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }
         background: 'rgba(11, 7, 9, 0.9)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        ml: { md: desktopOpen ? '280px' : '72px', xs: 0 },
-        width: { md: desktopOpen ? 'calc(100% - 280px)' : 'calc(100% - 72px)', xs: '100%' },
-        transition: 'margin-left 0.3s ease, width 0.3s ease',
+        ml: 0,
+        width: '100%',
         zIndex: 1100
       }}
     >
@@ -98,7 +97,7 @@ const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }
             noWrap
             sx={{
               fontWeight: 800,
-              fontSize: { xs: '0.95rem', sm: '1.25rem' },
+              fontSize: { xs: '0.82rem', sm: '1.1rem', md: '1.25rem' },
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}
@@ -115,12 +114,12 @@ const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }
             onChange={(e) => setTheme(e.target.value)}
             sx={{
               borderRadius: 3,
-              fontSize: '0.78rem',
+              fontSize: { xs: '0.72rem', sm: '0.78rem' },
               height: 34,
-              maxWidth: { xs: 100, sm: 130 },
+              maxWidth: { xs: 85, sm: 130 },
               background: 'rgba(255,255,255,0.05)',
               '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
-              '& .MuiSelect-select': { py: 0.6, px: 1 }
+              '& .MuiSelect-select': { py: 0.6, px: { xs: 0.5, sm: 1 } }
             }}
           >
             <MenuItem value="relentless">🔥 Crimson</MenuItem>
@@ -159,9 +158,9 @@ const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }
               variant="outlined"
               color="primary"
               size="small"
-              startIcon={<LockIcon />}
+              startIcon={<LockIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
               onClick={handleGoogleLogin}
-              sx={{ borderRadius: 2, whiteSpace: 'nowrap', fontSize: '0.78rem', height: 34, px: { xs: 1, sm: 1.5 } }}
+              sx={{ borderRadius: 2, whiteSpace: 'nowrap', fontSize: '0.75rem', height: 34, px: { xs: 1, sm: 1.5 } }}
             >
               Sign In
             </Button>
@@ -202,12 +201,12 @@ const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }
           <Button
             variant="contained"
             size="small"
-            startIcon={<AddIcon />}
+            startIcon={<AddIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
             onClick={() => setActiveModal('add-transaction')}
             sx={{
               borderRadius: 2,
               whiteSpace: 'nowrap',
-              fontSize: '0.78rem',
+              fontSize: { xs: '0.72rem', sm: '0.78rem' },
               height: 34,
               px: { xs: 1, sm: 1.5 },
               background: 'linear-gradient(135deg, #10b981, #059669)',
