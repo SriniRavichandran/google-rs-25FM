@@ -26,18 +26,33 @@ const AddBillModal = () => {
 
   const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-  // Helper to compute end date given a start date and cycle key
-  const computeEndDate = (startStr, cycleKey) => {
+  // Helper to compute end date given start date, period unit (DAYS, MONTHS, YEARS), count, and optional due day of month
+  const computeEndDate = (startStr, unit, value, dueDay) => {
     if (!startStr) return '';
     const d = new Date(startStr);
     if (isNaN(d.getTime())) return '';
 
-    if (cycleKey === '1M') d.setMonth(d.getMonth() + 1);
-    else if (cycleKey === '2M') d.setMonth(d.getMonth() + 2);
-    else if (cycleKey === '3M') d.setMonth(d.getMonth() + 3);
-    else if (cycleKey === '6M') d.setMonth(d.getMonth() + 6);
-    else if (cycleKey === '1Y') d.setFullYear(d.getFullYear() + 1);
-    else d.setMonth(d.getMonth() + 1);
+    const count = parseInt(value, 10) || 1;
+
+    if (unit === 'DAYS') {
+      d.setDate(d.getDate() + count);
+    } else if (unit === 'YEARS') {
+      d.setFullYear(d.getFullYear() + count);
+      if (dueDay && dueDay >= 1 && dueDay <= 31) {
+        d.setDate(Math.min(dueDay, 28));
+      }
+    } else {
+      // Default: MONTHS
+      d.setMonth(d.getMonth() + count);
+      if (dueDay && dueDay >= 1 && dueDay <= 31) {
+        const targetMonth = d.getMonth();
+        d.setDate(dueDay);
+        // Handle month end overflow
+        if (d.getMonth() !== targetMonth) {
+          d.setDate(0);
+        }
+      }
+    }
 
     return d.toISOString().split('T')[0];
   };
@@ -46,9 +61,11 @@ const AddBillModal = () => {
     name: '',
     category: 'Subscription',
     amount: '',
-    billingCycle: '1M',
+    periodUnit: 'MONTHS', // 'DAYS' | 'MONTHS' | 'YEARS'
+    periodValue: 1,       // e.g. 1, 2, 3, 6, 12, 15, 30
+    dueDayOfMonth: 5,     // Specific due day of month e.g. 5
     startDate: getTodayStr(),
-    endDate: computeEndDate(getTodayStr(), '1M'),
+    endDate: computeEndDate(getTodayStr(), 'MONTHS', 1, 5),
     status: 'ACTIVE'
   };
 
@@ -57,14 +74,19 @@ const AddBillModal = () => {
   useEffect(() => {
     if (editingBill) {
       const initialStart = editingBill.startDate || getTodayStr();
-      const initialCycle = editingBill.billingCycle || '1M';
+      const unit = editingBill.periodUnit || (editingBill.billingCycle?.endsWith('Y') ? 'YEARS' : editingBill.billingCycle?.endsWith('D') ? 'DAYS' : 'MONTHS');
+      const val = editingBill.periodValue || (editingBill.billingCycle === '2M' ? 2 : editingBill.billingCycle === '3M' ? 3 : editingBill.billingCycle === '6M' ? 6 : editingBill.billingCycle === '1Y' ? 1 : 1);
+      const dueDay = editingBill.dueDayOfMonth || editingBill.dueDay || 5;
+
       setFormData({
         name: editingBill.name || '',
         category: editingBill.category || 'Subscription',
         amount: editingBill.amount !== undefined ? editingBill.amount : '',
-        billingCycle: initialCycle,
+        periodUnit: unit,
+        periodValue: val,
+        dueDayOfMonth: dueDay,
         startDate: initialStart,
-        endDate: editingBill.endDate || computeEndDate(initialStart, initialCycle),
+        endDate: editingBill.endDate || computeEndDate(initialStart, unit, val, dueDay),
         status: editingBill.status || 'ACTIVE'
       });
     } else {
@@ -80,17 +102,19 @@ const AddBillModal = () => {
     setFormData(defaultForm);
   };
 
-  const handleCycleChange = (newCycle) => {
-    const newEnd = computeEndDate(formData.startDate, newCycle);
+  const handleUnitOrValueChange = (newUnit, newValue, newDueDay = formData.dueDayOfMonth) => {
+    const newEnd = computeEndDate(formData.startDate, newUnit, newValue, newDueDay);
     setFormData({
       ...formData,
-      billingCycle: newCycle,
+      periodUnit: newUnit,
+      periodValue: newValue,
+      dueDayOfMonth: newDueDay,
       endDate: newEnd
     });
   };
 
   const handleStartDateChange = (newStart) => {
-    const newEnd = computeEndDate(newStart, formData.billingCycle);
+    const newEnd = computeEndDate(newStart, formData.periodUnit, formData.periodValue, formData.dueDayOfMonth);
     setFormData({
       ...formData,
       startDate: newStart,
@@ -98,12 +122,24 @@ const AddBillModal = () => {
     });
   };
 
+  const handlePresetSelect = (unit, val) => {
+    handleUnitOrValueChange(unit, val);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const amt = parseFloat(formData.amount) || 0;
+    const count = parseInt(formData.periodValue, 10) || 1;
+
+    // Derived legacy billing cycle key for backwards compatibility
+    let cycleKey = `${count}${formData.periodUnit[0]}`;
+    if (formData.periodUnit === 'MONTHS' && count === 1) cycleKey = '1M';
+
     const payload = {
       ...formData,
-      amount: amt
+      amount: amt,
+      billingCycle: cycleKey,
+      dueDay: formData.dueDayOfMonth
     };
 
     if (editingBill) {
@@ -114,7 +150,7 @@ const AddBillModal = () => {
     handleClose();
   };
 
-  // Calculate validity duration & days remaining
+  // Calculate validity duration & cost breakdown
   const calculateValidity = () => {
     if (!formData.startDate || !formData.endDate) return null;
     const start = new Date(formData.startDate);
@@ -126,13 +162,16 @@ const AddBillModal = () => {
     const daysRemaining = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 
     const totalAmt = parseFloat(formData.amount) || 0;
-    let monthsInCycle = 1;
-    if (formData.billingCycle === '2M') monthsInCycle = 2;
-    else if (formData.billingCycle === '3M') monthsInCycle = 3;
-    else if (formData.billingCycle === '6M') monthsInCycle = 6;
-    else if (formData.billingCycle === '1Y') monthsInCycle = 12;
+    const count = parseInt(formData.periodValue, 10) || 1;
 
-    const monthlyCost = totalAmt / monthsInCycle;
+    let monthlyCost = totalAmt;
+    if (formData.periodUnit === 'MONTHS') {
+      monthlyCost = totalAmt / count;
+    } else if (formData.periodUnit === 'YEARS') {
+      monthlyCost = totalAmt / (count * 12);
+    } else if (formData.periodUnit === 'DAYS') {
+      monthlyCost = (totalAmt / count) * 30;
+    }
 
     return {
       totalDays: totalDays > 0 ? totalDays : 0,
@@ -168,7 +207,7 @@ const AddBillModal = () => {
               {editingBill ? '✏️ Edit Subscription / Bill' : '🔄 Add Bill / Subscription Tracker'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Select 1 Month, 2 Months, 3 Months, 6 Months, or 1 Year Subscription Dues
+              Configure Frequency (Day / Month / Year), Duration & Due Day
             </Typography>
           </Box>
         </Box>
@@ -178,6 +217,7 @@ const AddBillModal = () => {
       <form onSubmit={handleSubmit}>
         <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
           <Grid container spacing={2}>
+            {/* Bill Name */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -190,6 +230,7 @@ const AddBillModal = () => {
               />
             </Grid>
 
+            {/* Category */}
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
                 <InputLabel>Category</InputLabel>
@@ -210,11 +251,12 @@ const AddBillModal = () => {
               </FormControl>
             </Grid>
 
+            {/* Subscription Dues Amount */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 size="small"
-                label="Subscription Dues Amount (₹) *"
+                label="Subscription Amount (₹) *"
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -224,55 +266,107 @@ const AddBillModal = () => {
               />
             </Grid>
 
-            {/* Quick Billing Cycle Selector */}
-            <Grid item xs={12}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 1 }}>
-                SUBSCRIPTION CYCLE / DURATION PRESET *
-              </Typography>
-              <ButtonGroup fullWidth size="small" variant="outlined" sx={{ mb: 1 }}>
-                <Button
-                  onClick={() => handleCycleChange('1M')}
-                  variant={formData.billingCycle === '1M' ? 'contained' : 'outlined'}
-                  color="primary"
-                  sx={{ fontWeight: 700 }}
+            {/* FREQUENCY UNIT & DURATION SELECTION */}
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Frequency Unit *</InputLabel>
+                <Select
+                  value={formData.periodUnit}
+                  label="Frequency Unit *"
+                  onChange={(e) => handleUnitOrValueChange(e.target.value, formData.periodValue)}
                 >
-                  1 Month
-                </Button>
-                <Button
-                  onClick={() => handleCycleChange('2M')}
-                  variant={formData.billingCycle === '2M' ? 'contained' : 'outlined'}
-                  color="primary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  2 Months
-                </Button>
-                <Button
-                  onClick={() => handleCycleChange('3M')}
-                  variant={formData.billingCycle === '3M' ? 'contained' : 'outlined'}
-                  color="primary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  3 Months
-                </Button>
-                <Button
-                  onClick={() => handleCycleChange('6M')}
-                  variant={formData.billingCycle === '6M' ? 'contained' : 'outlined'}
-                  color="primary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  6 Months
-                </Button>
-                <Button
-                  onClick={() => handleCycleChange('1Y')}
-                  variant={formData.billingCycle === '1Y' ? 'contained' : 'outlined'}
-                  color="primary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  1 Year
-                </Button>
-              </ButtonGroup>
+                  <MenuItem value="DAYS">📅 Day(s)</MenuItem>
+                  <MenuItem value="MONTHS">📆 Month(s)</MenuItem>
+                  <MenuItem value="YEARS">🗓️ Year(s)</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
 
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label={`Duration Number (${formData.periodUnit}) *`}
+                type="number"
+                value={formData.periodValue}
+                onChange={(e) => handleUnitOrValueChange(formData.periodUnit, Math.max(1, parseInt(e.target.value, 10) || 1))}
+                required
+                inputProps={{ min: 1, step: 1 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Due Day of Month (1-31)"
+                type="number"
+                value={formData.dueDayOfMonth}
+                onChange={(e) => handleUnitOrValueChange(formData.periodUnit, formData.periodValue, Math.min(31, Math.max(1, parseInt(e.target.value, 10) || 1)))}
+                placeholder="e.g. 5"
+                inputProps={{ min: 1, max: 31, step: 1 }}
+              />
+            </Grid>
+
+            {/* QUICK PRESETS BAR */}
+            <Grid item xs={12}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.8 }}>
+                ⚡ QUICK PRESETS:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+                <Chip
+                  label="1 Month"
+                  clickable
+                  color={formData.periodUnit === 'MONTHS' && formData.periodValue === 1 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('MONTHS', 1)}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  label="2 Months"
+                  clickable
+                  color={formData.periodUnit === 'MONTHS' && formData.periodValue === 2 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('MONTHS', 2)}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  label="3 Months"
+                  clickable
+                  color={formData.periodUnit === 'MONTHS' && formData.periodValue === 3 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('MONTHS', 3)}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  label="6 Months"
+                  clickable
+                  color={formData.periodUnit === 'MONTHS' && formData.periodValue === 6 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('MONTHS', 6)}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  label="1 Year"
+                  clickable
+                  color={formData.periodUnit === 'YEARS' && formData.periodValue === 1 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('YEARS', 1)}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  label="15 Days"
+                  clickable
+                  color={formData.periodUnit === 'DAYS' && formData.periodValue === 15 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('DAYS', 15)}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  label="30 Days"
+                  clickable
+                  color={formData.periodUnit === 'DAYS' && formData.periodValue === 30 ? 'primary' : 'default'}
+                  onClick={() => handlePresetSelect('DAYS', 30)}
+                  sx={{ fontWeight: 700 }}
+                />
+              </Box>
+            </Grid>
+
+            {/* DATES */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -299,6 +393,7 @@ const AddBillModal = () => {
               />
             </Grid>
 
+            {/* STATUS */}
             <Grid item xs={12}>
               <FormControl fullWidth size="small">
                 <InputLabel>Subscription Status</InputLabel>
@@ -324,19 +419,9 @@ const AddBillModal = () => {
                   </Typography>
                   <Grid container spacing={1}>
                     <Grid item xs={6} sm={3}>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Plan Cycle</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Configured Plan</Typography>
                       <Chip
-                        label={
-                          formData.billingCycle === '1M'
-                            ? '1 Month (Monthly)'
-                            : formData.billingCycle === '2M'
-                            ? '2 Months'
-                            : formData.billingCycle === '3M'
-                            ? '3 Months (Quarterly)'
-                            : formData.billingCycle === '6M'
-                            ? '6 Months (Half-Yearly)'
-                            : '1 Year (Annual)'
-                        }
+                        label={`Every ${formData.periodValue} ${formData.periodUnit.toLowerCase()}`}
                         size="small"
                         color="primary"
                         sx={{ fontWeight: 800, fontSize: '0.7rem' }}
