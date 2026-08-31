@@ -36,9 +36,14 @@ const MainAppContent = () => {
   const { currentView, theme } = useFinance();
   const muiTheme = getMuiTheme(theme);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [desktopOpen, setDesktopOpen] = React.useState(true);
 
-  const handleDrawerToggle = () => {
+  const handleMobileToggle = () => {
     setMobileOpen(prev => !prev);
+  };
+
+  const handleDesktopToggle = () => {
+    setDesktopOpen(prev => !prev);
   };
 
   const renderCurrentView = () => {
@@ -64,9 +69,27 @@ const MainAppContent = () => {
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden' }}>
-        <Sidebar mobileOpen={mobileOpen} onClose={handleDrawerToggle} />
-        <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', width: '100%', overflowX: 'hidden' }}>
-          <TopHeader onMobileNavToggle={handleDrawerToggle} />
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onClose={handleMobileToggle}
+          desktopOpen={desktopOpen}
+          onDesktopClose={handleDesktopToggle}
+        />
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            minHeight: '100vh',
+            width: '100%',
+            overflowX: 'hidden',
+            transition: 'margin-left 0.3s ease, width 0.3s ease'
+          }}
+        >
+          <TopHeader
+            onMobileNavToggle={handleMobileToggle}
+            onDesktopNavToggle={handleDesktopToggle}
+            desktopOpen={desktopOpen}
+          />
           <PeriodTrackerBar />
           {renderCurrentView()}
         </Box>

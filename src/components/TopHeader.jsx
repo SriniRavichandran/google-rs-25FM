@@ -17,9 +17,10 @@ import LockIcon from '@mui/icons-material/Lock';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SyncIcon from '@mui/icons-material/Sync';
 import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useFinance } from '../context/FinanceContext.jsx';
 
-const TopHeader = ({ onMobileNavToggle }) => {
+const TopHeader = ({ onMobileNavToggle, onDesktopNavToggle, desktopOpen = true }) => {
   const {
     currentView,
     theme,
@@ -55,13 +56,15 @@ const TopHeader = ({ onMobileNavToggle }) => {
         background: 'rgba(11, 7, 9, 0.9)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        ml: { md: '280px', xs: 0 },
-        width: { md: 'calc(100% - 280px)', xs: '100%' },
+        ml: desktopOpen ? { md: '280px', xs: 0 } : 0,
+        width: desktopOpen ? { md: 'calc(100% - 280px)', xs: '100%' } : '100%',
+        transition: 'margin-left 0.3s ease, width 0.3s ease',
         zIndex: 1100
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', py: 0.5, px: { xs: 1.5, sm: 2 }, minHeight: '56px !important', gap: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+          {/* Mobile Menu Toggle Button */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -71,6 +74,25 @@ const TopHeader = ({ onMobileNavToggle }) => {
           >
             <MenuIcon />
           </IconButton>
+
+          {/* Desktop Menu Toggle Button */}
+          <Tooltip title={desktopOpen ? "Close / Collapse Sidebar" : "Open Sidebar Menu"}>
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={onDesktopNavToggle}
+              sx={{
+                mr: 1.5,
+                display: { xs: 'none', md: 'flex' },
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                '&:hover': { background: 'rgba(56, 189, 248, 0.15)', borderColor: '#38bdf8' }
+              }}
+            >
+              {desktopOpen ? <ChevronLeftIcon /> : <MenuIcon />}
+            </IconButton>
+          </Tooltip>
+
           <Typography
             variant="h6"
             noWrap

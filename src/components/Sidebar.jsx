@@ -11,6 +11,9 @@ import {
   Divider,
   Button
 } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -27,7 +30,7 @@ import { useFinance } from '../context/FinanceContext.jsx';
 
 const drawerWidth = 280;
 
-const Sidebar = ({ mobileOpen, onClose }) => {
+const Sidebar = ({ mobileOpen, onClose, desktopOpen = true, onDesktopClose }) => {
   const { currentView, setCurrentView, isAuthenticated, handleGoogleLogin } = useFinance();
 
   const handleNavClick = (id) => {
@@ -57,17 +60,49 @@ const Sidebar = ({ mobileOpen, onClose }) => {
 
   const drawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Sidebar Header Brand Logo */}
-      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <img src="logo.png" alt="RS-25F MIND Logo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            RS-25F MIND
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 1 }}>
-            SMART FINANCE
-          </Typography>
+      {/* Sidebar Header Brand Logo + Mobile Close (X) & Desktop Collapse (<) Buttons */}
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <img src="logo.png" alt="RS-25F MIND Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              RS-25F MIND
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: 1 }}>
+              SMART FINANCE
+            </Typography>
+          </Box>
         </Box>
+
+        {/* Mobile Close Icon Button (X) */}
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            color: '#ef4444',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            '&:hover': { background: 'rgba(239, 68, 68, 0.25)' }
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+
+        {/* Desktop Collapse Icon Button (<) */}
+        <IconButton
+          onClick={onDesktopClose}
+          size="small"
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            color: '#38bdf8',
+            background: 'rgba(56, 189, 248, 0.1)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            '&:hover': { background: 'rgba(56, 189, 248, 0.25)' }
+          }}
+        >
+          <ChevronLeftIcon fontSize="small" />
+        </IconButton>
       </Box>
 
       <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }} />
@@ -144,7 +179,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   );
 
   return (
-    <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
+    <Box component="nav" sx={{ width: desktopOpen ? { md: drawerWidth } : 0, flexShrink: { md: 0 }, transition: 'width 0.3s ease' }}>
       {/* Mobile temporary drawer */}
       <Drawer
         variant="temporary"
@@ -166,22 +201,24 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       </Drawer>
 
       {/* Desktop permanent drawer */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            background: 'rgba(11, 7, 9, 0.92)',
-            backdropFilter: 'blur(20px)',
-            borderRight: '1px solid rgba(255, 255, 255, 0.08)'
-          },
-        }}
-        open
-      >
-        {drawerContent}
-      </Drawer>
+      {desktopOpen && (
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', md: 'block' },
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              background: 'rgba(11, 7, 9, 0.92)',
+              backdropFilter: 'blur(20px)',
+              borderRight: '1px solid rgba(255, 255, 255, 0.08)'
+            },
+          }}
+          open
+        >
+          {drawerContent}
+        </Drawer>
+      )}
     </Box>
   );
 };
