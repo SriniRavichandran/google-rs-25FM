@@ -66,98 +66,98 @@ const DashboardView = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
+    <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
       {/* Hero Banner */}
-      <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.1))', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-        <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, py: 2.5 }}>
-          <img src="RS-25F Mind.png" alt="RS-25F MIND Logo" style={{ width: 56, height: 56, objectFit: 'contain' }} />
+      <Card sx={{ mb: 2, background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.1))', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: { xs: 1.5, sm: 2 }, px: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+          <img src="RS-25F Mind.png" alt="RS-25F MIND Logo" style={{ width: 42, height: 42, objectFit: 'contain' }} />
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', sm: '1.5rem' }, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '0.95rem', sm: '1.3rem', md: '1.5rem' }, background: 'linear-gradient(135deg, #10b981, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.2 }}>
               RS-25F MIND Personal Finance Tracker
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
-              SMART FINANCE. BETTER LIFE. | Track. Plan. Save. Invest. Grow.
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: { xs: '0.7rem', sm: '0.85rem' } }}>
+              SMART FINANCE. BETTER LIFE. | Track. Save. Invest.
             </Typography>
           </Box>
         </CardContent>
       </Card>
 
-      {/* Metrics Grid */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
+      {/* Metrics Grid (2 per row on mobile xs={6}) */}
+      <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
+        <Grid item xs={6} sm={6} md={2.4}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                 Total Net Worth
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5, fontSize: { xs: '1.35rem', sm: '1.5rem' } }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5, fontSize: { xs: '1.05rem', sm: '1.35rem', md: '1.5rem' } }}>
                 {formatCurrency(netWorth)}
               </Typography>
-              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600, fontSize: '0.72rem' }}>
-                Liquid + Invested + Loans - Debt
+              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600, fontSize: { xs: '0.62rem', sm: '0.72rem' }, display: 'block' }}>
+                Liquid + Invested - Debt
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={6} sm={6} md={2.4}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                 Savings Rate ({selectedPeriod.toUpperCase()})
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#f59e0b', my: 0.5, fontSize: { xs: '1.35rem', sm: '1.5rem' } }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#f59e0b', my: 0.5, fontSize: { xs: '1.05rem', sm: '1.35rem', md: '1.5rem' } }}>
                 {savingsRate.toFixed(1)}%
               </Typography>
-              <Typography variant="caption" sx={{ color: '#f59e0b', fontWeight: 600, fontSize: '0.72rem' }}>
+              <Typography variant="caption" sx={{ color: '#f59e0b', fontWeight: 600, fontSize: { xs: '0.62rem', sm: '0.72rem' }, display: 'block' }}>
                 Target: 30%+
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={6} sm={6} md={2.4}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
-                Liquid Cash Balance (Debit)
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                Liquid Cash (Debit)
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', my: 0.5, fontSize: { xs: '1.35rem', sm: '1.5rem' } }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#38bdf8', my: 0.5, fontSize: { xs: '1.05rem', sm: '1.35rem', md: '1.5rem' } }}>
                 {formatCurrency(totalBankBalance)}
               </Typography>
-              <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.72rem' }}>
+              <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 600, fontSize: { xs: '0.62rem', sm: '0.72rem' }, display: 'block' }}>
                 Available Reserve
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={6} sm={6} md={2.4}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
-                Money Owed (Given Loan)
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                Money Owed (Loan)
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5, fontSize: { xs: '1.35rem', sm: '1.5rem' } }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#10b981', my: 0.5, fontSize: { xs: '1.05rem', sm: '1.35rem', md: '1.5rem' } }}>
                 {formatCurrency(totalLoansGiven)}
               </Typography>
-              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600, fontSize: '0.72rem' }}>
+              <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600, fontSize: { xs: '0.62rem', sm: '0.72rem' }, display: 'block' }}>
                 Lent Assets
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid item xs={6} sm={6} md={2.4}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase' }}>
-                Borrowed Debt (Taken Loan)
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                Borrowed Debt
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#ef4444', my: 0.5, fontSize: { xs: '1.35rem', sm: '1.5rem' } }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#ef4444', my: 0.5, fontSize: { xs: '1.05rem', sm: '1.35rem', md: '1.5rem' } }}>
                 {formatCurrency(totalLoansTaken)}
               </Typography>
-              <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600, fontSize: '0.72rem' }}>
+              <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600, fontSize: { xs: '0.62rem', sm: '0.72rem' }, display: 'block' }}>
                 Payoff Dues
               </Typography>
             </CardContent>

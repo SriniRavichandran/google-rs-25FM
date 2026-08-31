@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Drawer,
   List,
@@ -10,7 +9,9 @@ import {
   Box,
   Divider,
   Button,
-  Tooltip
+  Tooltip,
+  Select,
+  MenuItem
 } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
@@ -27,13 +28,14 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { useFinance } from '../context/FinanceContext.jsx';
 
 const drawerWidth = 280;
 const collapsedWidth = 72;
 
 const Sidebar = ({ mobileOpen, onClose, desktopOpen = true, onDesktopClose }) => {
-  const { currentView, setCurrentView, isAuthenticated, handleGoogleLogin } = useFinance();
+  const { currentView, setCurrentView, isAuthenticated, handleGoogleLogin, theme, setTheme } = useFinance();
 
   const handleNavClick = (id) => {
     setCurrentView(id);
@@ -203,6 +205,39 @@ const Sidebar = ({ mobileOpen, onClose, desktopOpen = true, onDesktopClose }) =>
           ))}
         </List>
       </Box>
+
+      {/* Theme Selector in Sidebar Footer */}
+      {!isCollapsed && (
+        <Box sx={{ px: 2, py: 1, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.5 }}>
+            🎨 APP THEME COLOR:
+          </Typography>
+          <Select
+            size="small"
+            fullWidth
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            sx={{
+              borderRadius: 2,
+              fontSize: '0.78rem',
+              height: 32,
+              background: 'rgba(255,255,255,0.05)',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+              '& .MuiSelect-select': { py: 0.4, px: 1 }
+            }}
+          >
+            <MenuItem value="relentless">🔥 Crimson Red</MenuItem>
+            <MenuItem value="cyber">🎨 Cyber Cyan</MenuItem>
+            <MenuItem value="purple">💜 Neon Purple</MenuItem>
+            <MenuItem value="emerald">🟢 Emerald Green</MenuItem>
+            <MenuItem value="sunset">🌅 Sunset Amber</MenuItem>
+            <MenuItem value="ocean">🌊 Deep Ocean</MenuItem>
+            <MenuItem value="rose">🌸 Passion Rose</MenuItem>
+            <MenuItem value="lime">⚡ Electric Lime</MenuItem>
+            <MenuItem value="slate">🪙 Metallic Slate</MenuItem>
+          </Select>
+        </Box>
+      )}
 
       {/* Footer Sheet Connection Status */}
       <Box sx={{ p: isCollapsed ? 1.5 : 2, borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
