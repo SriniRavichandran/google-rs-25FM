@@ -6,10 +6,10 @@
   "homepage": "https://SriniRavichandran.github.io/google-rs-25FM/",
   "scripts": {
     "dev": "vite --host --port 8080",
-    "build": "vite build",
+    "build": "vite build && node -e \"require('fs').writeFileSync('dist/.nojekyll', '')\"",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "npx gh-pages -d dist"
+    "deploy": "npx gh-pages -d dist --dotfiles"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
