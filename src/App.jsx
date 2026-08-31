@@ -21,6 +21,8 @@ import GoalsView from './views/GoalsView.jsx';
 import ReviewsView from './views/ReviewsView.jsx';
 import NetWorthView from './views/NetWorthView.jsx';
 
+import MobileBottomBar from './components/MobileBottomBar.jsx';
+
 import AddTransactionModal from './components/Modals/AddTransactionModal.jsx';
 import AddCreditCardModal from './components/Modals/AddCreditCardModal.jsx';
 import AddBankAccountModal from './components/Modals/AddBankAccountModal.jsx';
@@ -98,12 +100,14 @@ const MainAppContent = () => {
             sx={{
               flex: 1,
               width: '100%',
-              p: { xs: 1.5, sm: 2.5, md: 3 }
+              p: { xs: 1, sm: 2, md: 3 },
+              pb: { xs: 9, sm: 9, md: 3 }
             }}
           >
             {renderCurrentView()}
           </Box>
         </Box>
+        <MobileBottomBar />
         <AddTransactionModal />
         <AddCreditCardModal />
         <AddBankAccountModal />
