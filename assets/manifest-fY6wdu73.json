@@ -1,0 +1,17 @@
+{
+  "name": "RS-25F MIND Personal Finance Tracker",
+  "short_name": "RS-25F MIND",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "description": "3D Personal Finance Tracker for daily, weekly, monthly, quarterly, and yearly tracking with Google Sheets Sync.",
+  "icons": [
+    {
+      "src": "RS-25F Mind.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
