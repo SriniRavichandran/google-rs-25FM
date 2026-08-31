@@ -6,7 +6,7 @@
   "homepage": "https://SriniRavichandran.github.io/google-rs-25FM/",
   "scripts": {
     "dev": "vite --host --port 8080",
-    "build": "vite build && node -e \"require('fs').writeFileSync('dist/.nojekyll', '')\"",
+    "build": "vite build && node -e \"const fs=require('fs'); fs.writeFileSync('dist/.nojekyll', ''); fs.mkdirSync('dist/docs', {recursive:true}); fs.writeFileSync('dist/docs/.nojekyll', ''); fs.cpSync('dist/assets', 'dist/docs/assets', {recursive:true}); fs.copyFileSync('dist/index.html', 'dist/docs/index.html');\"",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "npx gh-pages -d dist --dotfiles"

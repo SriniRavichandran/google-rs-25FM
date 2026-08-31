@@ -4,9 +4,16 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -27,7 +34,7 @@ jobs:
       - name: Build Project
         run: npm run build
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages Branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
