@@ -185,10 +185,11 @@ const BillsView = () => {
                   <TableCell sx={{ fontWeight: 700, width: 60, whiteSpace: 'nowrap' }}>S.No</TableCell>
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Service / Bill Name</TableCell>
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Cycle & Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Monthly Eq.</TableCell>
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Start Date</TableCell>
-                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>End Date / Renewal</TableCell>
-                  <TableCell sx={{ fontWeight: 700, minWidth: 150, whiteSpace: 'nowrap' }}>Cycle & Validity</TableCell>
+                  <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Renewal / End Date</TableCell>
+                  <TableCell sx={{ fontWeight: 700, minWidth: 140, whiteSpace: 'nowrap' }}>Progress & Validity</TableCell>
                   <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Status</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>Actions</TableCell>
                 </TableRow>
@@ -196,13 +197,33 @@ const BillsView = () => {
               <TableBody>
                 {billsWithMetrics.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} align="center" sx={{ py: 5, color: 'text.secondary' }}>
+                    <TableCell colSpan={10} align="center" sx={{ py: 5, color: 'text.secondary' }}>
                       No subscriptions or bills added yet. Click <strong>"Add Bill / Subscription"</strong> to start tracking!
                     </TableCell>
                   </TableRow>
                 ) : (
                   billsWithMetrics.map((b, idx) => {
                     const color = getStatusColor(b.status, b.isExpired, b.isDueSoon);
+
+                    let monthsInCycle = 1;
+                    if (b.billingCycle === '2M') monthsInCycle = 2;
+                    else if (b.billingCycle === '3M') monthsInCycle = 3;
+                    else if (b.billingCycle === '6M') monthsInCycle = 6;
+                    else if (b.billingCycle === '1Y') monthsInCycle = 12;
+
+                    const cycleLabel =
+                      b.billingCycle === '2M'
+                        ? '2 Months'
+                        : b.billingCycle === '3M'
+                        ? '3 Months'
+                        : b.billingCycle === '6M'
+                        ? '6 Months'
+                        : b.billingCycle === '1Y'
+                        ? '1 Year'
+                        : '1 Month';
+
+                    const monthlyCost = (parseFloat(b.amount) || 0) / monthsInCycle;
+
                     return (
                       <TableRow key={b.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                         <TableCell sx={{ fontWeight: 700, color: 'text.secondary', whiteSpace: 'nowrap' }}>
@@ -216,8 +237,18 @@ const BillsView = () => {
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>
                           <Chip label={b.category} size="small" variant="outlined" sx={{ fontWeight: 600, fontSize: '0.75rem' }} />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 800, color: '#38bdf8', fontFamily: 'JetBrains Mono', whiteSpace: 'nowrap' }}>
-                          {formatCurrency(b.amount)}
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 800, color: '#38bdf8', fontFamily: 'JetBrains Mono' }}>
+                              {formatCurrency(b.amount)}
+                            </Typography>
+                            <Chip label={cycleLabel} size="small" color="primary" sx={{ fontWeight: 800, fontSize: '0.7rem', height: 20 }} />
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#10b981', fontFamily: 'JetBrains Mono' }}>
+                            {formatCurrency(monthlyCost)}/mo
+                          </Typography>
                         </TableCell>
                         <TableCell sx={{ color: 'text.secondary', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                           {b.startDate || '—'}
@@ -225,7 +256,7 @@ const BillsView = () => {
                         <TableCell sx={{ fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                           {b.endDate || '—'}
                         </TableCell>
-                        <TableCell sx={{ minWidth: 150 }}>
+                        <TableCell sx={{ minWidth: 140 }}>
                           <Box sx={{ width: '100%' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                               <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
@@ -257,23 +288,30 @@ const BillsView = () => {
                         </TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-                            <Tooltip title="Edit Subscription">
-                              <IconButton
-                                size="small"
-                                sx={{
-                                  color: '#38bdf8',
-                                  background: 'rgba(56, 189, 248, 0.15)',
-                                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                                  '&:hover': { background: 'rgba(56, 189, 248, 0.3)' }
-                                }}
-                                onClick={() => {
-                                  setEditingBill(b);
-                                  setActiveModal('add-bill');
-                                }}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<EditIcon fontSize="small" />}
+                              onClick={() => {
+                                setEditingBill(b);
+                                setActiveModal('add-bill');
+                              }}
+                              sx={{
+                                color: '#38bdf8',
+                                borderColor: 'rgba(56, 189, 248, 0.5)',
+                                background: 'rgba(56, 189, 248, 0.1)',
+                                '&:hover': {
+                                  borderColor: '#38bdf8',
+                                  background: 'rgba(56, 189, 248, 0.25)'
+                                },
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                px: 1.2,
+                                py: 0.3
+                              }}
+                            >
+                              Edit
+                            </Button>
                             <Tooltip title="Delete Subscription">
                               <IconButton
                                 size="small"
@@ -281,7 +319,7 @@ const BillsView = () => {
                                   color: '#ef4444',
                                   background: 'rgba(239, 68, 68, 0.15)',
                                   border: '1px solid rgba(239, 68, 68, 0.3)',
-                                  '&:hover': { background: 'rgba(239, 68, 68, 0.3)' }
+                                  '&:hover': { background: 'rgba(239, 68, 68, 0.25)' }
                                 }}
                                 onClick={() => setDeleteTarget(b)}
                               >

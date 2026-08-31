@@ -14,7 +14,8 @@ import {
   IconButton,
   Box,
   Typography,
-  Chip
+  Chip,
+  ButtonGroup
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
@@ -24,9 +25,20 @@ const AddBillModal = () => {
   const { activeModal, setActiveModal, editingBill, setEditingBill, addBill, editBill } = useFinance();
 
   const getTodayStr = () => new Date().toISOString().split('T')[0];
-  const getNextMonthStr = () => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1);
+
+  // Helper to compute end date given a start date and cycle key
+  const computeEndDate = (startStr, cycleKey) => {
+    if (!startStr) return '';
+    const d = new Date(startStr);
+    if (isNaN(d.getTime())) return '';
+
+    if (cycleKey === '1M') d.setMonth(d.getMonth() + 1);
+    else if (cycleKey === '2M') d.setMonth(d.getMonth() + 2);
+    else if (cycleKey === '3M') d.setMonth(d.getMonth() + 3);
+    else if (cycleKey === '6M') d.setMonth(d.getMonth() + 6);
+    else if (cycleKey === '1Y') d.setFullYear(d.getFullYear() + 1);
+    else d.setMonth(d.getMonth() + 1);
+
     return d.toISOString().split('T')[0];
   };
 
@@ -34,8 +46,9 @@ const AddBillModal = () => {
     name: '',
     category: 'Subscription',
     amount: '',
+    billingCycle: '1M',
     startDate: getTodayStr(),
-    endDate: getNextMonthStr(),
+    endDate: computeEndDate(getTodayStr(), '1M'),
     status: 'ACTIVE'
   };
 
@@ -43,23 +56,19 @@ const AddBillModal = () => {
 
   useEffect(() => {
     if (editingBill) {
+      const initialStart = editingBill.startDate || getTodayStr();
+      const initialCycle = editingBill.billingCycle || '1M';
       setFormData({
         name: editingBill.name || '',
         category: editingBill.category || 'Subscription',
-        amount: editingBill.amount || '',
-        startDate: editingBill.startDate || getTodayStr(),
-        endDate: editingBill.endDate || getNextMonthStr(),
+        amount: editingBill.amount !== undefined ? editingBill.amount : '',
+        billingCycle: initialCycle,
+        startDate: initialStart,
+        endDate: editingBill.endDate || computeEndDate(initialStart, initialCycle),
         status: editingBill.status || 'ACTIVE'
       });
     } else {
-      setFormData({
-        name: '',
-        category: 'Subscription',
-        amount: '',
-        startDate: getTodayStr(),
-        endDate: getNextMonthStr(),
-        status: 'ACTIVE'
-      });
+      setFormData(defaultForm);
     }
   }, [editingBill, activeModal]);
 
@@ -69,6 +78,24 @@ const AddBillModal = () => {
     setActiveModal(null);
     setEditingBill(null);
     setFormData(defaultForm);
+  };
+
+  const handleCycleChange = (newCycle) => {
+    const newEnd = computeEndDate(formData.startDate, newCycle);
+    setFormData({
+      ...formData,
+      billingCycle: newCycle,
+      endDate: newEnd
+    });
+  };
+
+  const handleStartDateChange = (newStart) => {
+    const newEnd = computeEndDate(newStart, formData.billingCycle);
+    setFormData({
+      ...formData,
+      startDate: newStart,
+      endDate: newEnd
+    });
   };
 
   const handleSubmit = (e) => {
@@ -98,9 +125,19 @@ const AddBillModal = () => {
     const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     const daysRemaining = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 
+    const totalAmt = parseFloat(formData.amount) || 0;
+    let monthsInCycle = 1;
+    if (formData.billingCycle === '2M') monthsInCycle = 2;
+    else if (formData.billingCycle === '3M') monthsInCycle = 3;
+    else if (formData.billingCycle === '6M') monthsInCycle = 6;
+    else if (formData.billingCycle === '1Y') monthsInCycle = 12;
+
+    const monthlyCost = totalAmt / monthsInCycle;
+
     return {
       totalDays: totalDays > 0 ? totalDays : 0,
       daysRemaining,
+      monthlyCost,
       isExpired: daysRemaining < 0,
       isDueSoon: daysRemaining >= 0 && daysRemaining <= 7
     };
@@ -131,7 +168,7 @@ const AddBillModal = () => {
               {editingBill ? '✏️ Edit Subscription / Bill' : '🔄 Add Bill / Subscription Tracker'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Track active duration between Start Date & End Date
+              Select 1 Month, 2 Months, 3 Months, 6 Months, or 1 Year Subscription Dues
             </Typography>
           </Box>
         </Box>
@@ -148,7 +185,7 @@ const AddBillModal = () => {
                 label="Bill / Service Name *"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. Netflix 4K, Amazon Prime, Wifi Broadband, Gym, House Rent"
+                placeholder="e.g. Netflix, Airtel OTT, Wifi Broadband, Gym, House Rent"
                 required
               />
             </Grid>
@@ -177,14 +214,63 @@ const AddBillModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="Recurring Billing Amount (₹) *"
+                label="Subscription Dues Amount (₹) *"
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                placeholder="e.g. 649"
+                placeholder="e.g. 4000"
                 required
                 inputProps={{ min: 0, step: 1 }}
               />
+            </Grid>
+
+            {/* Quick Billing Cycle Selector */}
+            <Grid item xs={12}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 1 }}>
+                SUBSCRIPTION CYCLE / DURATION PRESET *
+              </Typography>
+              <ButtonGroup fullWidth size="small" variant="outlined" sx={{ mb: 1 }}>
+                <Button
+                  onClick={() => handleCycleChange('1M')}
+                  variant={formData.billingCycle === '1M' ? 'contained' : 'outlined'}
+                  color="primary"
+                  sx={{ fontWeight: 700 }}
+                >
+                  1 Month
+                </Button>
+                <Button
+                  onClick={() => handleCycleChange('2M')}
+                  variant={formData.billingCycle === '2M' ? 'contained' : 'outlined'}
+                  color="primary"
+                  sx={{ fontWeight: 700 }}
+                >
+                  2 Months
+                </Button>
+                <Button
+                  onClick={() => handleCycleChange('3M')}
+                  variant={formData.billingCycle === '3M' ? 'contained' : 'outlined'}
+                  color="primary"
+                  sx={{ fontWeight: 700 }}
+                >
+                  3 Months
+                </Button>
+                <Button
+                  onClick={() => handleCycleChange('6M')}
+                  variant={formData.billingCycle === '6M' ? 'contained' : 'outlined'}
+                  color="primary"
+                  sx={{ fontWeight: 700 }}
+                >
+                  6 Months
+                </Button>
+                <Button
+                  onClick={() => handleCycleChange('1Y')}
+                  variant={formData.billingCycle === '1Y' ? 'contained' : 'outlined'}
+                  color="primary"
+                  sx={{ fontWeight: 700 }}
+                >
+                  1 Year
+                </Button>
+              </ButtonGroup>
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -194,7 +280,7 @@ const AddBillModal = () => {
                 label="Start Date *"
                 type="date"
                 value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                onChange={(e) => handleStartDateChange(e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 required
               />
@@ -204,7 +290,7 @@ const AddBillModal = () => {
               <TextField
                 fullWidth
                 size="small"
-                label="End Date / Renewal Date *"
+                label="End Date / Next Renewal *"
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
@@ -229,35 +315,61 @@ const AddBillModal = () => {
               </FormControl>
             </Grid>
 
-            {/* Live Validity Summary */}
+            {/* Live Validity & Cost Breakdown Summary */}
             {validity && (
               <Grid item xs={12}>
-                <Box sx={{ p: 1.5, borderRadius: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', mb: 0.5 }}>
-                    SUBSCRIPTION DURATION & VALIDITY
+                <Box sx={{ p: 2, borderRadius: 2, background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+                  <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 800, display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                    SUBSCRIPTION DUES & COST BREAKDOWN
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>Billing Cycle:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#38bdf8' }}>
-                        {formData.startDate} → {formData.endDate} ({validity.totalDays} Days)
+                  <Grid container spacing={1}>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Plan Cycle</Typography>
+                      <Chip
+                        label={
+                          formData.billingCycle === '1M'
+                            ? '1 Month (Monthly)'
+                            : formData.billingCycle === '2M'
+                            ? '2 Months'
+                            : formData.billingCycle === '3M'
+                            ? '3 Months (Quarterly)'
+                            : formData.billingCycle === '6M'
+                            ? '6 Months (Half-Yearly)'
+                            : '1 Year (Annual)'
+                        }
+                        size="small"
+                        color="primary"
+                        sx={{ fontWeight: 800, fontSize: '0.7rem' }}
+                      />
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Total Cycle Dues</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: '#38bdf8' }}>
+                        ₹{(parseFloat(formData.amount) || 0).toLocaleString('en-IN')}
                       </Typography>
-                    </Box>
-                    <Box>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Monthly Equivalent</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: '#10b981' }}>
+                        ₹{Math.round(validity.monthlyCost).toLocaleString('en-IN')}/mo
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Renewal Due In</Typography>
                       <Chip
                         label={
                           validity.isExpired
-                            ? `Expired ${Math.abs(validity.daysRemaining)} days ago`
+                            ? `Expired ${Math.abs(validity.daysRemaining)}d ago`
                             : validity.daysRemaining === 0
-                            ? 'Renews Today'
-                            : `${validity.daysRemaining} Days Remaining`
+                            ? 'Due Today'
+                            : `${validity.daysRemaining} Days Left`
                         }
                         size="small"
                         color={validity.isExpired ? 'error' : validity.isDueSoon ? 'warning' : 'success'}
-                        sx={{ fontWeight: 700 }}
+                        sx={{ fontWeight: 700, fontSize: '0.7rem' }}
                       />
-                    </Box>
-                  </Box>
+                    </Grid>
+                  </Grid>
                 </Box>
               </Grid>
             )}
@@ -270,7 +382,7 @@ const AddBillModal = () => {
             variant="contained"
             sx={{ background: 'linear-gradient(135deg, #38bdf8, #0284c7)', fontWeight: 700 }}
           >
-            {editingBill ? 'Update Subscription' : '💾 Save to Sheet'}
+            {editingBill ? 'Update Subscription' : '💾 Save Bill Record'}
           </Button>
         </DialogActions>
       </form>
